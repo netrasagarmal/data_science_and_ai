@@ -2,7 +2,6 @@
 
 Tokenization is the **first and fundamental step in Natural Language Processing (NLP)**. It involves **breaking down a text (sentence or document) into smaller pieces** called *tokens*, which can be **words, subwords, characters, or sentences**. These tokens are then used as input to NLP models.
 
----
 
 ### 🔹 Why Tokenization is Important
 
@@ -10,7 +9,6 @@ Tokenization is the **first and fundamental step in Natural Language Processing 
 2. **Handles linguistic complexity** like punctuation, contractions, compound words.
 3. **Improves model performance** by normalizing text (removing ambiguity).
 
----
 
 ### 🔹 Types of Tokenization in NLP
 
