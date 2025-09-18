@@ -16,95 +16,104 @@ Let's break it down into types with examples.
 
 ---
 
-## 1. **Word Tokenization**
+### 1. Word Tokenization
 
-👉 Splits text into individual words based on spaces or punctuation.
+**Explanation:** Word tokenization is the most common and intuitive form of tokenization. It involves splitting a text into individual words. This is typically done by separating the text based on whitespace and punctuation.
 
-### 🔹 Example:
+**Example:**
+* **Input Text:** "The quick brown fox jumps over the lazy dog."
+* **Tokens:** `["The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog", "."]`
 
-```python
-sentence = "I'm learning NLP!"
-tokens = ["I'm", "learning", "NLP", "!"]
-```
-
-🔸 Tools: `nltk.word_tokenize`, `split()`, spaCy
-
----
-
-## 2. **Subword Tokenization**
-
-👉 Breaks words into smaller meaningful units (subwords). Useful for handling **out-of-vocabulary words** (e.g., "unhappiness" → "un", "happi", "ness").
-
-### 🔹 Example:
-
-Sentence: `"unhappiness"`
-
-* Subword Tokens (using Byte-Pair Encoding): `['un', 'happiness']`
-* Or: `['un', 'happi', 'ness']`
-
-🔸 Used in: BERT (WordPiece), GPT (BPE), RoBERTa (BPE), T5 (SentencePiece)
+**Popular Algorithms and Libraries:**
+* **Treebank Word Tokenizer:** Used in the Penn Treebank project, this tokenizer has a set of rules to handle punctuation and contractions (e.g., "don't" becomes "do", "n't"). Libraries like **NLTK (Natural Language Toolkit)** in Python provide an implementation of this.
+* **spaCy's Tokenizer:** spaCy's tokenizer is highly efficient and language-specific, designed to handle the nuances of different languages.
 
 ---
 
-## 3. **Character Tokenization**
+### 2. Sentence Tokenization
 
-👉 Breaks down text into individual characters.
+**Explanation:** As the name suggests, sentence tokenization involves breaking down a text into its constituent sentences. This is often a precursor to word tokenization, allowing for analysis at a sentence level. Identifying sentence boundaries can be complex due to the ambiguous nature of punctuation like periods, which can denote abbreviations as well as sentence endings.
 
-### 🔹 Example:
+**Example:**
+* **Input Text:** "Dr. Strange is a powerful sorcerer. He protects the Earth from mystical threats."
+* **Tokens:** `["Dr. Strange is a powerful sorcerer.", "He protects the Earth from mystical threats."]`
 
-```python
-sentence = "NLP"
-tokens = ['N', 'L', 'P']
-```
-
-🔸 Useful for character-level models or spelling correction tasks.
-
----
-
-## 4. **Sentence Tokenization**
-
-👉 Splits text into individual sentences.
-
-### 🔹 Example:
-
-```python
-text = "Hello world. I'm learning NLP. It's fun!"
-tokens = ['Hello world.', "I'm learning NLP.", "It's fun!"]
-```
-
-🔸 Tools: `nltk.sent_tokenize`, spaCy
+**Popular Algorithms and Libraries:**
+* **Punkt Sentence Tokenizer:** This is an unsupervised, trainable model for sentence boundary detection available in **NLTK**. It can be trained on a specific corpus to learn about abbreviations and other contexts for periods.
+* **spaCy's Sentence Segmenter:** spaCy uses a dependency parser to identify sentence boundaries, which often leads to more accurate results.
 
 ---
 
-## 5. **Whitespace Tokenization**
+### 3. Character Tokenization
 
-👉 Splits text based purely on whitespace. Doesn't handle punctuation or contractions well.
+**Explanation:** Character tokenization breaks down the text into a sequence of individual characters. This approach is simple and avoids the issue of out-of-vocabulary (OOV) words, as every character is part of the vocabulary. However, it can result in very long sequences and may lose some of the inherent meaning of words.
 
-### 🔹 Example:
+**Example:**
+* **Input Text:** "hello"
+* **Tokens:** `['h', 'e', 'l', 'l', 'o']`
 
-```python
-sentence = "Don't tokenize badly!"
-tokens = ["Don't", "tokenize", "badly!"]
-```
-
-🔸 Not recommended for serious NLP tasks.
+**Popular Algorithms and Libraries:**
+* This is a straightforward process and can be implemented with basic string manipulation in most programming languages. There are no complex algorithms specifically for this task.
 
 ---
 
-## 6. **Regex Tokenization**
+### 4. Subword Tokenization
 
-👉 Uses regular expressions to extract specific patterns like hashtags, mentions, numbers.
+**Explanation:** Subword tokenization strikes a balance between word and character tokenization. It breaks down words into smaller, meaningful sub-units. This technique is particularly effective for handling rare words, morphologically rich languages (like German or Turkish), and out-of-vocabulary words. It allows the model to understand novel words by composing them from known subwords.
 
-### 🔹 Example:
+**Example:**
+* **Input Text:** "unhappily"
+* **Subword Tokens:** `["un", "happi", "ly"]`
 
-Extracting hashtags:
+**Popular Algorithms:**
+* **Byte-Pair Encoding (BPE):** BPE starts with a vocabulary of individual characters and iteratively merges the most frequent adjacent pairs of tokens. This process continues until a predefined vocabulary size is reached. It is used by models like GPT-3.
+* **WordPiece:** Similar to BPE, WordPiece also builds a vocabulary from a base of characters. However, it merges tokens based on which new token maximizes the likelihood of the training data. This is the tokenization algorithm used by BERT.
+* **SentencePiece:** Developed by Google, SentencePiece is an unsupervised text tokenizer and detokenizer. It treats the input text as a raw stream of Unicode characters, which allows it to be language-agnostic. It supports both BPE and unigram language model tokenization.
 
-```python
-import re
-text = "Let's #learn #NLP"
-tokens = re.findall(r"#\w+", text)
-# ['#learn', '#NLP']
-```
+---
+
+### 5. Whitespace Tokenization
+
+**Explanation:** This is the simplest form of tokenization, where the text is split based on whitespace characters (spaces, tabs, newlines). It is fast and straightforward but can be problematic as it doesn't handle punctuation effectively and may group words and punctuation together.
+
+**Example:**
+* **Input Text:** "Hello world! How are you?"
+* **Tokens:** `["Hello", "world!", "How", "are", "you?"]`
+
+**Popular Algorithms and Libraries:**
+* This can be easily implemented using the `split()` method available in most programming languages. Libraries like **NLTK** also provide a `WhitespaceTokenizer`.
+
+---
+
+### 6. Regex Tokenization
+
+**Explanation:** Regex (Regular Expression) tokenization involves using a regular expression pattern to define what constitutes a token. This provides a high degree of flexibility, allowing you to create custom tokenization rules to capture specific patterns in the text, such as hashtags, mentions, or specific date formats.
+
+**Example:**
+* **Input Text:** "My email is test@example.com, and my phone is 123-456-7890."
+* **Regex Pattern for words and numbers:** `\w+`
+* **Tokens:** `['My', 'email', 'is', 'test', 'example', 'com', 'and', 'my', 'phone', 'is', '123', '456', '7890']`
+
+**Popular Algorithms and Libraries:**
+* Python's built-in **`re` module** is the primary tool for regex operations.
+* **NLTK's `RegexpTokenizer`** provides a convenient way to apply regex patterns for tokenization.
+
+---
+
+### 7. N-gram Tokenization
+
+**Explanation:** N-gram tokenization is the process of creating a sequence of 'n' contiguous items (words or characters) from a given text. While not a direct method of splitting text into primary units, it's a crucial technique for capturing context and is often applied after initial word or character tokenization.
+
+* **Unigrams (1-grams):** Single words. `["The", "quick", "brown", "fox"]`
+* **Bigrams (2-grams):** Pairs of consecutive words. `["The quick", "quick brown", "brown fox"]`
+* **Trigrams (3-grams):** Triplets of consecutive words. `["The quick brown", "quick brown fox"]`
+
+**Example:**
+* **Input Text:** "I love to write code."
+* **Bigram Tokens:** `["I love", "love to", "to write", "write code"]`
+
+**Popular Algorithms and Libraries:**
+* Libraries like **NLTK** and **scikit-learn** in Python have functions to easily generate n-grams from a list of tokens. This technique is widely used in language modeling and feature engineering for machine learning models.
 
 ---
 
@@ -499,4 +508,3 @@ print("Tokens:", encoded.tokens)
 | Library for training | `tokenizers` (HF)    | `tokenizers` (HF)            |
 
 ---
-
