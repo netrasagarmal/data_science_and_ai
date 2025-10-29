@@ -91,3 +91,179 @@ These measure how **pure** or **mixed** the data is in each branch.
 > “A Decision Tree Classifier makes predictions by splitting data into smaller groups based on questions — just like how humans make step-by-step decisions.”
 
 ---
+
+---
+
+## 🌳 1. ENTROPY
+
+### 🔹 Intuition:
+
+Entropy measures **impurity** or **disorder** in a dataset.
+
+* If all samples belong to **one class** → entropy = 0 (pure).
+* If samples are **evenly mixed** → entropy = 1 (maximum disorder).
+
+---
+
+### 🔹 Formula:
+
+```math
+H(S) = - \sum_{i=1}^{c} p_i \log_2(p_i)
+```
+
+### 🔹 Notations:
+
+| Symbol     | Meaning                                                         |
+| ---------- | --------------------------------------------------------------- |
+| $H(S)$   | Entropy of the dataset ( S )                                    |
+| $c$      | Number of classes                                               |
+| $p_i$     | Probability (proportion) of class ( i ) in dataset ( S )        |
+| $\log_2$ | Logarithm base 2 (used because information is measured in bits) |
+
+---
+
+### 🔹 Example (Entropy Calculation):
+
+Suppose you have 10 samples:
+
+* 6 are **Positive**
+* 4 are **Negative**
+
+```math
+p_+ = \frac{6}{10} = 0.6, \quad p_- = \frac{4}{10} = 0.4
+```
+
+```math
+H(S) = -[0.6 \log_2(0.6) + 0.4 \log_2(0.4)]
+```
+
+```math
+H(S) = -[0.6(-0.7369) + 0.4(-1.3219)]
+```
+
+```math
+H(S) = 0.9709 \approx 0.97
+```
+
+✅ Interpretation:
+Entropy = 0.97 → high disorder → not a pure node.
+
+---
+
+## 🍀 2. GINI IMPURITY
+
+### 🔹 Intuition:
+
+Gini Impurity also measures impurity but with a simpler calculation.
+It represents the **probability that a randomly chosen sample would be misclassified** if we label it randomly according to class proportions.
+
+---
+
+### 🔹 Formula:
+
+```math
+G(S) = 1 - \sum_{i=1}^{c} p_i^2
+```
+
+### 🔹 Notations:
+
+| Symbol   | Meaning                                 |
+| -------- | --------------------------------------- |
+| $G(S)$ | Gini impurity of dataset ( S )          |
+| $c$    | Number of classes                       |
+| $p_i$  | Probability (proportion) of class ( i ) |
+
+---
+
+### 🔹 Example (Gini Calculation):
+
+Using same dataset (6 positive, 4 negative):
+
+```math
+G(S) = 1 - (0.6^2 + 0.4^2)
+```
+```math
+G(S) = 1 - (0.36 + 0.16)
+```
+```math
+G(S) = 1 - 0.52 = 0.48
+```
+
+✅ Interpretation:
+Gini = 0.48 → moderately impure.
+Gini = 0 means pure, Gini = 0.5 means maximum impurity for 2 classes.
+
+---
+
+## 📊 3. INFORMATION GAIN (IG)
+
+### 🔹 Intuition:
+
+Information Gain tells us **how much uncertainty (entropy) is reduced** after splitting the data based on a feature.
+
+Higher IG → Better feature to split on.
+
+---
+
+### 🔹 Formula (Using Entropy):
+
+```math
+IG(S, A) = H(S) - \sum_{v \in \text{Values}(A)} \frac{|S_v|}{|S|} H(S_v)
+```
+
+### 🔹 Notations:
+
+| Symbol       | Meaning                                              | 
+| ------------ | ---------------------------------------------------- | 
+| $IG(S, A)$ | Information Gain of attribute ( A ) on dataset ( S ) |
+| $H(S)$     | Entropy of parent dataset                            |
+| $v$        | Each possible value of attribute ( A )               |
+| $S_v$      | Subset of ( S ) where ( A = v )                      |
+| H(S_v)   | Entropy of subset ( S_v )                            |  
+---
+
+### 🔹 Example (Information Gain):
+
+Suppose we have 10 samples,
+6 Yes and 4 No → ( H(S) = 0.97 )
+
+Now split by **Feature = Weather (Sunny or Rainy)**
+
+| Weather | Yes | No | Total | Entropy                                           |
+| ------- | --- | -- | ----- | ------------------------------------------------- |
+| Sunny   | 2   | 3  | 5     | $H_1 = -[0.4\log_2(0.4)+0.6\log_2(0.6)] = 0.97$ |
+| Rainy   | 4   | 1  | 5     | $H_2 = -[0.8\log_2(0.8)+0.2\log_2(0.2)] = 0.72$ |
+
+Now calculate weighted entropy after split:
+
+```math
+H_{\text{after}} = \frac{5}{10} \times 0.97 + \frac{5}{10} \times 0.72 = 0.845
+```
+
+```math
+IG(S, \text{Weather}) = H(S) - H_{\text{after}} = 0.97 - 0.845 = 0.125
+```
+
+✅ Interpretation:
+Information Gain = 0.125
+→ This means splitting on *Weather* reduces uncertainty by 0.125 bits.
+
+---
+
+## 🧮 Comparison Summary
+
+| Metric               | Formula                           | Range                 | Interpretation    |   
+| -------------------- | --------------------------------- | --------------------- | ----------------- |
+| **Entropy**          | $-\sum p_i \log_2 p_i$          | 0–1                   | High = more mixed | 
+| **Gini Impurity**    | $1 - \sum p_i^2$                | 0–0.5 (for 2 classes) | High = more mixed | 
+| **Information Gain** | $H_{\text{parent}} - \sum \frac{S_v}{S} H(S_v)$ | ≥0 | Higher = better feature |
+
+---
+
+## 🧠 Tip to Remember (for interviews):
+
+* **Entropy → Disorder (logarithmic)**
+* **Gini → Misclassification probability (squared)**
+* **Information Gain → Reduction in disorder**
+
+---
