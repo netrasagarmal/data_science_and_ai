@@ -1,4 +1,4 @@
-## Repo for Data Science and Artifiical Intellegence Notes
+## Repo for Data Science and Artifical Intelligence Notes
 
 ### Table of contents:
 
