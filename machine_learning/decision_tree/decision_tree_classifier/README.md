@@ -2,7 +2,6 @@
 
 <details>
 <summary> What is a Decision Tree Classifier?</summary>
-### 🌳 What is a Decision Tree Classifier?
 
 A **Decision Tree Classifier** is like a **flowchart** that helps make decisions by **asking a series of questions** about the data and **splitting** it based on the answers.
 
@@ -89,10 +88,10 @@ These measure how **pure** or **mixed** the data is in each branch.
 > “A Decision Tree Classifier makes predictions by splitting data into smaller groups based on questions — just like how humans make step-by-step decisions.”
 
 </details>
----
 
 <details>
 <summary> Entropy, Gini Impurity, Information Gain</summary>
+
 ## 🌳 1. ENTROPY
 
 ### 🔹 Intuition:
@@ -281,6 +280,24 @@ Gini = 0 means pure, Gini = 0.5 means maximum impurity for 2 classes.
 * Think of **Entropy** as "how much surprise or uncertainty is in the node" (information view).
 * Think of **Gini** as "how often would you make a mistake if you guessed a random label according to the node’s class proportions" (misclassification chance).
   Both ask “how mixed is this node?” — they just answer with slightly different perspectives.
+
+---
+### Difference between Gini Index and Entropy
+
+|| Gini Index | Entropy |
+|-|-|-|
+|1. | It is the probability of misclassifying a randomly chosen element in a set. | While entropy measures the amount of uncertainty or randomness in a set. |
+|2. | The range of the Gini index is [0, 0.5], where 0 indicates perfect purity and 0.5 indicates maximum impurity.	| The range of entropy is [0, log2(C)], where c is the number of classes. The range becomes [0, 1] for binary classification.
+ |
+|3. | Gini index is a linear measure. | Entropy is a logarithmic measure. |
+|4. | It can be interpreted as the expected error rate in a classifier.	| It can be interpreted as the average amount of information needed to specify the class of an instance. |
+|5. | It is sensitive to the distribution of classes in a set. | It is sensitive to the number of classes. |
+|6. |The computational complexity of the Gini index is O(c). | Computational complexity of entropy is O(c * log(c)).|
+|7. |It is less robust than entropy. | It is more robust than Gini index.|
+|8. |It is sensitive. | It is comparatively less sensitive.|
+|9. |It has a bias toward selecting splits that result in a more balanced distribution of classes. | It has a bias toward selecting splits that result in a higher reduction of uncertainty.|
+|10. |Gini index is typically used in CART (Classification and Regression Trees) algorithms. | Entropy is typically used in ID3 and C4.5 algorithms|
+
 
 ---
 
