@@ -317,9 +317,9 @@ Higher IG → Better feature to split on.
 
 ### 🔹 Formula (Using Entropy):
 
-```math
-IG(S, A) = H(S) - \sum_{v \in \text{Values}(A)} \frac{|S_v|}{|S|} H(S_v)
-```
+
+$IG(S, A) = H(S) - \sum_{v \in \text{Values}(A)} \frac{|S_v|}{|S|} H(S_v)$
+
 
 ### 🔹 Notations:
 
@@ -346,13 +346,10 @@ Now split by **Feature = Weather (Sunny or Rainy)**
 
 Now calculate weighted entropy after split:
 
-```math
-H_{\text{after}} = \frac{5}{10} \times 0.97 + \frac{5}{10} \times 0.72 = 0.845
-```
+$H_{\text{after}} = \frac{5}{10} \times 0.97 + \frac{5}{10} \times 0.72 = 0.845$
 
-```math
-IG(S, \text{Weather}) = H(S) - H_{\text{after}} = 0.97 - 0.845 = 0.125
-```
+
+$IG(S, \text{Weather}) = H(S) - H_{\text{after}} = 0.97 - 0.845 = 0.125$
 
 ✅ Interpretation:
 Information Gain = 0.125
