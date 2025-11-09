@@ -105,9 +105,7 @@ Entropy measures **impurity** or **disorder** in a dataset.
 
 ### 🔹 Formula:
 
-```math
-H(S) = - \sum_{i=1}^{c} p_i \log_2(p_i)
-```
+$H(S) = - \sum_{i=1}^{c} p_i \log_2(p_i)$
 
 ### 🔹 Notations:
 
@@ -127,21 +125,13 @@ Suppose you have 10 samples:
 * 6 are **Positive**
 * 4 are **Negative**
 
-```math
-p_+ = \frac{6}{10} = 0.6, \quad p_- = \frac{4}{10} = 0.4
-```
+$p_+ = \frac{6}{10} = 0.6, \quad p_- = \frac{4}{10} = 0.4$
 
-```math
-H(S) = -[0.6 \log_2(0.6) + 0.4 \log_2(0.4)]
-```
+$H(S) = -[0.6 \log_2(0.6) + 0.4 \log_2(0.4)]$
 
-```math
-H(S) = -[0.6(-0.7369) + 0.4(-1.3219)]
-```
+$H(S) = -[0.6(-0.7369) + 0.4(-1.3219)]$
 
-```math
-H(S) = 0.9709 \approx 0.97
-```
+$H(S) = 0.9709 \approx 0.97$
 
 ✅ Interpretation:
 Entropy = 0.97 → high disorder → not a pure node.
@@ -159,9 +149,7 @@ It represents the **probability that a randomly chosen sample would be misclassi
 
 ### 🔹 Formula:
 
-```math
-G(S) = 1 - \sum_{i=1}^{c} p_i^2
-```
+$G(S) = 1 - \sum_{i=1}^{c} p_i^2$
 
 ### 🔹 Notations:
 
@@ -177,15 +165,11 @@ G(S) = 1 - \sum_{i=1}^{c} p_i^2
 
 Using same dataset (6 positive, 4 negative):
 
-```math
-G(S) = 1 - (0.6^2 + 0.4^2)
-```
-```math
-G(S) = 1 - (0.36 + 0.16)
-```
-```math
-G(S) = 1 - 0.52 = 0.48
-```
+$G(S) = 1 - (0.6^2 + 0.4^2)$
+
+$G(S) = 1 - (0.36 + 0.16)$
+
+$G(S) = 1 - 0.52 = 0.48$
 
 ✅ Interpretation:
 Gini = 0.48 → moderately impure.
