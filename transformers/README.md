@@ -2,7 +2,7 @@
 
 <details>
 
-### Transformers, Encoders, and Decoders:
+<summary>Transformers, Encoders, and Decoders:</summary>
 
 **Explanation:**
 
@@ -29,9 +29,11 @@
 - Suppose we have a chatbot application that provides answers to user queries. In a traditional LLM-based chatbot, the model generates responses based on the probability distribution learned during training. In contrast, a RAG-based chatbot first generates candidate responses using a pre-trained language model. Then, it retrieves the most relevant responses from a knowledge base, such as a database of frequently asked questions or a collection of articles, using techniques like sparse vector similarity or dense vector similarity. This allows the RAG-based chatbot to provide more accurate and contextually relevant responses compared to traditional LLM-based chatbots.
 
 </details>
+
 ---
+
 <details>
-### Self Attention Mechanism & QKV Mechanism:
+<summary>Self Attention Mechanism & QKV Mechanism:</summary>
 
 **Key Highlights:**
 
@@ -116,9 +118,11 @@ The paper's title "Attention is All You Need" became prophetic. The Transformer 
 The core message: By creating a mechanism that dynamically focuses on relevant parts of the input, we can create more intelligent, context-aware models that outperform traditional sequential processing approaches.
 
 </details>
+
 ---
+
 <details>
-### Sequence-to-Sequence (Seq2Seq) models VS Transformers
+<summary>Sequence-to-Sequence (Seq2Seq) models VS Transformers</summary>
 
 Let me explain the key differences between sequence-to-sequence (seq2seq) models and Transformer attention mechanism models.
 
@@ -244,10 +248,12 @@ Transformers were introduced in 2017 in the paper *"Attention is All You Need"*.
 Transformers are now the foundation of most modern NLP models, while Seq2Seq models are mostly of historical interest or used in specific scenarios where Transformers may be overkill.
 
 </details>
+
 ---
+
 <details>
 
-### Types of Transformers
+<summary>Types of Transformers</summary>
 
 Transformers are a versatile architecture that has been adapted and extended for various tasks in natural language processing (NLP), computer vision, and other domains. Here are the main types of Transformers, categorized based on their design and use cases:
 
@@ -410,10 +416,12 @@ Transformers are a versatile architecture that has been adapted and extended for
 Transformers are highly flexible and have been adapted for a wide range of tasks and domains. Their ability to handle sequential data, capture long-range dependencies, and scale to large datasets has made them the foundation of modern AI systems.
 
 </details>
+
 ---
+
 <details>
 
-### Layers in Language Model
+<summary>Layers in Language Model</summary>
 
 Great question! Here's a simple explanation of **different layers commonly found in deep learning models**, especially **Transformer-based models** like BERT, GPT, etc.
 
@@ -477,10 +485,67 @@ Great question! Here's a simple explanation of **different layers commonly found
 - **Upsampling Layers** (in detection or segmentation)
 
 </details>
+
 ---
+
 <details>
 
-### Attension Mechanish and  Mask
+<summary>Understanding Key Components of Transformer Architecture</summary>
+
+### **Input Embeddings (Token Representations)**
+
+Input embeddings convert text tokens (like words or subwords) into dense numerical vectors that the model can process:
+
+- **Process**: Each token (word/subword) from your vocabulary is mapped to a fixed-length vector (typically 256-1024 dimensions)
+- **Purpose**: These vectors capture semantic relationships between words - similar words have similar vector representations
+- **Example**: The word "king" might be represented as [0.2, -0.4, 0.7, ...] while "queen" might be [0.1, -0.3, 0.8, ...]
+- **Learning**: These embeddings are learned during model training to optimize for the task
+
+### Positional Encodings
+
+Since transformers process all tokens simultaneously (not sequentially like RNNs), positional encodings inject information about token position:
+
+- **Formula**: Typically uses sine and cosine functions of different frequencies:
+    - For even dimensions: PE(pos,2i) = sin(pos/10000^(2i/d))
+    - For odd dimensions: PE(pos,2i+1) = cos(pos/10000^(2i/d))
+- **Visualization**: Creates a unique pattern for each position that the model can learn to interpret
+- **Addition**: These encodings are simply added to the token embeddings
+
+### Residual Connections and Normalization
+
+**Residual Connections**:
+
+- **Formula**: Output = Layer(Input) + Input
+- **Purpose**: Helps combat vanishing gradients in deep networks by providing a direct path for gradient flow
+- **Visual**: Think of it as a "shortcut" connection that adds the input directly to the output of a sublayer
+
+**Layer Normalization**:
+
+- **Formula**: Normalizes the values across features for each example: y = γ(x-μ)/σ + β
+- **Purpose**: Stabilizes training by ensuring the inputs to each layer have consistent scale
+- **Implementation**: Calculates mean and variance across the feature dimension for each position separately
+
+### Feed Forward Networks with Non-Linear Activation
+
+The feed-forward network in transformers consists of two linear transformations with a non-linear function between them:
+
+- **First Transformation**: Expands from model dimension (e.g., 768) to a larger dimension (e.g., 3072)
+- **Non-Linear Activation**: Typically ReLU or GELU function that introduces non-linearity
+    - ReLU: f(x) = max(0, x)
+    - GELU: Smoother approximation of ReLU that accounts for input magnitude
+- **Second Transformation**: Projects back down to the original model dimension
+
+**Formula**: FFN(x) = max(0, xW₁ + b₁)W₂ + b₂
+
+This combination allows the network to learn complex patterns and relationships in the data that wouldn't be possible with linear transformations alone.
+
+</details>
+
+---
+
+<details>
+
+<summary>Attension Mechanish and  Mask</summary>
 
 In the **attention mechanism**, especially in **transformers**, the concepts of **Query**, **Key**, and **Value** come from **information retrieval systems**, and they help determine **how much focus one word in a sequence should give to other words**.
 
@@ -664,10 +729,12 @@ In a transformer model:
 
 
 </details>
+
 ---
+
 <details>
 
-### Add and Layer Norm
+<summary> Add and Layer Norm</summary>
 
 Here's a **detailed explanation** of the `**Add & LayerNorm**` step in Transformer models, structured clearly for interviews and understanding:
 
@@ -789,9 +856,12 @@ x = LayerNorm(x + ffn_output)
 | Helps With | Gradient flow, faster convergence, model stability |
 
 </details>
+
 ---
+
 <details>
-### Encoder-Only Transformer Architecture (e.g., BERT)
+
+<summary>Encoder-Only Transformer Architecture (e.g., BERT)</summary>
 
 ![image.png](attachment:d1bd961e-ae08-4dbe-afee-43a24811e91c:image.png)
 
@@ -934,10 +1004,12 @@ At the top of the encoder, we add a task-specific layer:
 - Mention that encoder-only models are used in **NLP understanding tasks**, not generation (unlike GPT models).
 
 </details>
+
 ---
+
 <details>
 
-### Decoder-Only Transformer Architecture (e.g., GPT)
+<summary>Decoder-Only Transformer Architecture (e.g., GPT)</summary>
 
 ### 🌟 High-Level Summary
 
@@ -1099,62 +1171,11 @@ Input Tokens ──> Embedding ──> [Decoder Block 1]
 
 
 </details>
+
 ---
+
 <details>
-
-### Understanding Key Components of Transformer Architecture
-
-### **Input Embeddings (Token Representations)**
-
-Input embeddings convert text tokens (like words or subwords) into dense numerical vectors that the model can process:
-
-- **Process**: Each token (word/subword) from your vocabulary is mapped to a fixed-length vector (typically 256-1024 dimensions)
-- **Purpose**: These vectors capture semantic relationships between words - similar words have similar vector representations
-- **Example**: The word "king" might be represented as [0.2, -0.4, 0.7, ...] while "queen" might be [0.1, -0.3, 0.8, ...]
-- **Learning**: These embeddings are learned during model training to optimize for the task
-
-### Positional Encodings
-
-Since transformers process all tokens simultaneously (not sequentially like RNNs), positional encodings inject information about token position:
-
-- **Formula**: Typically uses sine and cosine functions of different frequencies:
-    - For even dimensions: PE(pos,2i) = sin(pos/10000^(2i/d))
-    - For odd dimensions: PE(pos,2i+1) = cos(pos/10000^(2i/d))
-- **Visualization**: Creates a unique pattern for each position that the model can learn to interpret
-- **Addition**: These encodings are simply added to the token embeddings
-
-### Residual Connections and Normalization
-
-**Residual Connections**:
-
-- **Formula**: Output = Layer(Input) + Input
-- **Purpose**: Helps combat vanishing gradients in deep networks by providing a direct path for gradient flow
-- **Visual**: Think of it as a "shortcut" connection that adds the input directly to the output of a sublayer
-
-**Layer Normalization**:
-
-- **Formula**: Normalizes the values across features for each example: y = γ(x-μ)/σ + β
-- **Purpose**: Stabilizes training by ensuring the inputs to each layer have consistent scale
-- **Implementation**: Calculates mean and variance across the feature dimension for each position separately
-
-### Feed Forward Networks with Non-Linear Activation
-
-The feed-forward network in transformers consists of two linear transformations with a non-linear function between them:
-
-- **First Transformation**: Expands from model dimension (e.g., 768) to a larger dimension (e.g., 3072)
-- **Non-Linear Activation**: Typically ReLU or GELU function that introduces non-linearity
-    - ReLU: f(x) = max(0, x)
-    - GELU: Smoother approximation of ReLU that accounts for input magnitude
-- **Second Transformation**: Projects back down to the original model dimension
-
-**Formula**: FFN(x) = max(0, xW₁ + b₁)W₂ + b₂
-
-This combination allows the network to learn complex patterns and relationships in the data that wouldn't be possible with linear transformations alone.
-
-</details>
----
-<details>
-### Creating a **Large Language Model (LLM)**
+<summary>Creating a **Large Language Model (LLM)</summary>
 
 Creating a **Large Language Model (LLM)** like GPT, Claude, or LLaMA involves a complex, multi-step process that includes **data collection**, **preprocessing**, **training**, **fine-tuning**, and **evaluation**. Below is a detailed breakdown of each step:
 
@@ -1338,9 +1359,11 @@ LLMs are continuously improved based on user feedback and new data.
 Building an LLM is a complex and resource-intensive process that requires expertise in data science, machine learning, and software engineering. Each step—from data collection to deployment—plays a critical role in ensuring the model's performance, scalability, and ethical use. By following these steps, developers can create powerful and versatile language models that can be applied to a wide range of tasks.
 
 </details>
+
 ---
+
 <details>
-### LLM Parameters
+<summary>LLM Parameters</summary>
 
 ![image.png](attachment:9bdadcbd-76d9-4851-b9bf-b9de1ed627b0:image.png)
 
@@ -1487,10 +1510,12 @@ Suppose the model outputs this next-token distribution:
 ---
 
 </details>
+
 ---
+
 <details>
 
-### Types of Finetuning:
+<summary>Types of Finetuning:</summary>
 
 Absolutely — fine-tuning language models goes far beyond just LoRA and QLoRA. There are several **strategies**, each with its own **trade-offs** in compute, memory, accuracy, and flexibility. Here's a breakdown of the **main types of fine-tuning methods**:
 
@@ -1659,9 +1684,12 @@ Instead of changing model weights, **inject fresh knowledge at inference time** 
 | RAG | 0% | Very Low | Knowledge injection at runtime |
 
 </details>
+
 ---
+
 <details>
-### PEFT, LoRA and QLoRA:
+
+<summary>PEFT, LoRA and QLoRA:</summary>
 
 Great question! **PEFT** stands for **Parameter-Efficient Fine-Tuning** — and it refers to both the **general idea** of training only a small number of parameters in a large model, *and* a specific **Python library by Hugging Face** that makes this super easy.
 
@@ -1839,10 +1867,12 @@ LoRA is already efficient—but QLoRA pushes it **even further** by combining **
 ---
 
 </details>
+
 ---
+
 <details>
 
-### How Transofrmer Works/Thinks/Understands:
+<summary> How Transofrmer Works/Thinks/Understands:</summary> 
 
 Transformer models, such as GPT, Claude, LLaMA, and DeepSeek, are state-of-the-art architectures for natural language processing (NLP) tasks, including text generation. These models understand and generate text based on a given prompt by leveraging a combination of advanced techniques, including **self-attention mechanisms**, **pre-training on large datasets**, and **fine-tuning for specific tasks**. Here's a detailed breakdown of how they work:
 
@@ -1977,9 +2007,11 @@ Transformer models like GPT are pre-trained on massive datasets and fine-tuned f
 - Their ability to capture context and scale to massive sizes makes them the foundation of modern NLP systems like GPT, Claude, and LLaMA.
 
 </details>
+
 ---
+
 <details>
-### Parameters vs Tokens
+<summary> Parameters vs Tokens </summary> 
 
 When training a large language model (LLM), **tokens** and **parameters** represent two distinct aspects of the model and training process. Here's the difference:
 
@@ -2029,9 +2061,11 @@ To maximize performance:
 If you’re working on a specific LLM project, balancing the number of parameters with the size and diversity of the dataset is key to achieving good performance while optimizing resources. Would you like advice on a specific model size or dataset scale?
 
 </details>
+
 ---
+
 <details>
-### Comparison of different LLMs:
+<summary> Comparison of different LLMs:</summary> 
 
 DeepSeek, Claude, GPT-4, Gemini, and LLaMA 3 are all advanced language models, but they differ in their **architecture**, **training data**, **capabilities**, **use cases**, and **development teams**. Below is a detailed comparison of these models:
 
@@ -2192,9 +2226,11 @@ Each model has its unique strengths and is optimized for different use cases:
 - Use **LLaMA 3** for open-source, customizable, and efficient language modeling.
 
 </details>
+
 ---
+
 <details>
-## Multi-Model Transformers
+<summary> Multi-Model Transformers </summary> 
 
 ### **How Multi-Modal Transformers Learn Vision and Text Correlations**
 
@@ -2263,9 +2299,11 @@ These models learn by:
 Would you like an example of how a model like CLIP or Flamingo processes an image-text pair? 🚀
 
 </details>
+
 ---
+
 <details>
-### Hallucinations in LLM
+<summary> Hallucinations in LLM </summary> 
 
 Handling **hallucinations** in Large Language Models (LLMs) is a crucial part of building trustworthy, enterprise-grade AI systems. Here’s a **structured explanation**, suitable for interviews and technical discussions.
 
