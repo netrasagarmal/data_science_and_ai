@@ -6,5 +6,5 @@
 - [Deep Learning](deep_learning/)
 - [Natural Language Processing (NLP)](nlp/)
 - [Generative AI](genai/)
-- [Transformers](tranformers/)
+- [Transformers](transformers/)
 - [Other Implementations](other_implementations_from_scratch/)
