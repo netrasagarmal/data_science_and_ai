@@ -3,20 +3,27 @@
 Tokenization is the **first and fundamental step in Natural Language Processing (NLP)**. It involves **breaking down a text (sentence or document) into smaller pieces** called *tokens*, which can be **words, subwords, characters, or sentences**. These tokens are then used as input to NLP models.
 
 
-### 🔹 Why Tokenization is Important
+### 🔹 Why Tokenization is Important:
+
+Tokenization is crucial for transformer models because it converts messy, human text into structured numerical data (tokens) the model can process, simplifying input, managing vocabulary size, creating context-rich representations via embeddings, and enabling the self-attention mechanism to understand word relationships, making training efficient and effective for understanding/generating language. 
 
 1. **Enables structured input for models** (e.g., transformer models expect numerical token IDs).
 2. **Handles linguistic complexity** like punctuation, contractions, compound words.
 3. **Improves model performance** by normalizing text (removing ambiguity).
 
+### When training an llm what is the exact input string tokens or token ids?
+LLMs take numeric encoded token IDs as input during training and inference, not raw text or words directly. The process starts with tokenization, where text is broken into tokens (words, subwords, punctuation), and then each unique token is mapped to a specific integer ID from a vocabulary, converting language into a numerical format the model can process mathematically. 
+
+**Here's the typical flow:**
+1. **Input Text:** You provide text (e.g., "Hello world!").
+2. **Tokenization:** A tokenizer breaks the text into tokens (e.g., ["Hello", " world", "!"]).
+3. **ID Mapping:** Each token is looked up in the model's vocabulary and converted to its unique integer ID (e.g., [15496, 2088, 0]).
+4. **Embedding:** These IDs are then converted into dense numerical vectors (embeddings) that capture semantic meaning, which are the actual inputs to the neural network layers.
+5. **Training/Inference:** The model processes these numerical sequences (embeddings) to learn patterns or generate responses. 
 
 ### 🔹 Types of Tokenization in NLP
 
-Let's break it down into types with examples.
-
----
-
-### 1. Word Tokenization
+#### 1. Word Tokenization
 
 **Explanation:** Word tokenization is the most common and intuitive form of tokenization. It involves splitting a text into individual words. This is typically done by separating the text based on whitespace and punctuation.
 
@@ -28,9 +35,8 @@ Let's break it down into types with examples.
 * **Treebank Word Tokenizer:** Used in the Penn Treebank project, this tokenizer has a set of rules to handle punctuation and contractions (e.g., "don't" becomes "do", "n't"). Libraries like **NLTK (Natural Language Toolkit)** in Python provide an implementation of this.
 * **spaCy's Tokenizer:** spaCy's tokenizer is highly efficient and language-specific, designed to handle the nuances of different languages.
 
----
 
-### 2. Sentence Tokenization
+#### 2. Sentence Tokenization
 
 **Explanation:** As the name suggests, sentence tokenization involves breaking down a text into its constituent sentences. This is often a precursor to word tokenization, allowing for analysis at a sentence level. Identifying sentence boundaries can be complex due to the ambiguous nature of punctuation like periods, which can denote abbreviations as well as sentence endings.
 
@@ -42,9 +48,8 @@ Let's break it down into types with examples.
 * **Punkt Sentence Tokenizer:** This is an unsupervised, trainable model for sentence boundary detection available in **NLTK**. It can be trained on a specific corpus to learn about abbreviations and other contexts for periods.
 * **spaCy's Sentence Segmenter:** spaCy uses a dependency parser to identify sentence boundaries, which often leads to more accurate results.
 
----
 
-### 3. Character Tokenization
+#### 3. Character Tokenization
 
 **Explanation:** Character tokenization breaks down the text into a sequence of individual characters. This approach is simple and avoids the issue of out-of-vocabulary (OOV) words, as every character is part of the vocabulary. However, it can result in very long sequences and may lose some of the inherent meaning of words.
 
@@ -55,9 +60,8 @@ Let's break it down into types with examples.
 **Popular Algorithms and Libraries:**
 * This is a straightforward process and can be implemented with basic string manipulation in most programming languages. There are no complex algorithms specifically for this task.
 
----
 
-### 4. Subword Tokenization
+#### 4. Subword Tokenization
 
 **Explanation:** Subword tokenization strikes a balance between word and character tokenization. It breaks down words into smaller, meaningful sub-units. This technique is particularly effective for handling rare words, morphologically rich languages (like German or Turkish), and out-of-vocabulary words. It allows the model to understand novel words by composing them from known subwords.
 
@@ -70,9 +74,8 @@ Let's break it down into types with examples.
 * **WordPiece:** Similar to BPE, WordPiece also builds a vocabulary from a base of characters. However, it merges tokens based on which new token maximizes the likelihood of the training data. This is the tokenization algorithm used by BERT.
 * **SentencePiece:** Developed by Google, SentencePiece is an unsupervised text tokenizer and detokenizer. It treats the input text as a raw stream of Unicode characters, which allows it to be language-agnostic. It supports both BPE and unigram language model tokenization.
 
----
 
-### 5. Whitespace Tokenization
+#### 5. Whitespace Tokenization
 
 **Explanation:** This is the simplest form of tokenization, where the text is split based on whitespace characters (spaces, tabs, newlines). It is fast and straightforward but can be problematic as it doesn't handle punctuation effectively and may group words and punctuation together.
 
@@ -83,9 +86,8 @@ Let's break it down into types with examples.
 **Popular Algorithms and Libraries:**
 * This can be easily implemented using the `split()` method available in most programming languages. Libraries like **NLTK** also provide a `WhitespaceTokenizer`.
 
----
 
-### 6. Regex Tokenization
+#### 6. Regex Tokenization
 
 **Explanation:** Regex (Regular Expression) tokenization involves using a regular expression pattern to define what constitutes a token. This provides a high degree of flexibility, allowing you to create custom tokenization rules to capture specific patterns in the text, such as hashtags, mentions, or specific date formats.
 
@@ -98,9 +100,8 @@ Let's break it down into types with examples.
 * Python's built-in **`re` module** is the primary tool for regex operations.
 * **NLTK's `RegexpTokenizer`** provides a convenient way to apply regex patterns for tokenization.
 
----
 
-### 7. N-gram Tokenization
+#### 7. N-gram Tokenization
 
 **Explanation:** N-gram tokenization is the process of creating a sequence of 'n' contiguous items (words or characters) from a given text. While not a direct method of splitting text into primary units, it's a crucial technique for capturing context and is often applied after initial word or character tokenization.
 
@@ -165,7 +166,7 @@ Input IDs: [101, 19204, 2003, 8503, 1999, 17953, 1012, 102]
 ```
 
 ---
-# Byte Pair Encoding (BPE) and WordPiece tokenization
+### Byte Pair Encoding (BPE) and WordPiece tokenization
 
 **Byte Pair Encoding (BPE)** and **WordPiece** tokenization—both are subword tokenization techniques used in modern NLP models like GPT and BERT. They help handle:
 
@@ -175,35 +176,35 @@ Input IDs: [101, 19204, 2003, 8503, 1999, 17953, 1012, 102]
 
 ---
 
-## 🔷 1. Byte Pair Encoding (BPE) Tokenization
+#### 🔷 1. Byte Pair Encoding (BPE) Tokenization
 
-### ✅ Core Idea:
+##### ✅ Core Idea:
 
 Byte Pair Encoding is a **data compression algorithm** adapted for NLP. It merges the **most frequent pairs of characters/subwords** in a corpus iteratively to create a vocabulary of subwords.
 
 ---
 
-### 🛠️ How BPE Works (Step-by-Step):
+##### 🛠️ How BPE Works (Step-by-Step):
 
-#### 🔹 Step 1: Start with characters
+**Step 1: Start with characters**
 
 Every word is initially split into characters (with an end-of-word symbol `</w>` for training).
 
-#### 🔹 Step 2: Count frequency of symbol pairs
+**Step 2: Count frequency of symbol pairs**
 
 Find the most frequent adjacent character pairs.
 
-#### 🔹 Step 3: Merge the most frequent pair
+**Step 3: Merge the most frequent pair**
 
 Combine those characters into a new subword token.
 
-#### 🔹 Step 4: Repeat
+**Step 4: Repeat**
 
 Repeat until the desired vocabulary size is reached.
 
 ---
 
-### 📌 Example:
+📌 **Example:**
 
 **Corpus** (tiny set for illustration):
 
@@ -219,7 +220,7 @@ Initial tokens (each word split into chars + `</w>`):
 ['l', 'o', 'w', 'e', 'r', '</w>']
 ```
 
-#### 🔹 Iteration 1: Most frequent pair → `('l', 'o')`
+🔹 **Iteration 1: Most frequent pair → `('l', 'o')`**
 
 New tokens:
 
@@ -229,7 +230,7 @@ New tokens:
 ['lo', 'w', 'e', 'r', '</w>']
 ```
 
-#### 🔹 Iteration 2: Merge `('lo', 'w')` → `low`
+🔹 **Iteration 2: Merge `('lo', 'w')` → `low`**
 
 ```
 ['low', '</w>']
@@ -237,7 +238,7 @@ New tokens:
 ['low', 'e', 'r', '</w>']
 ```
 
-#### 🔹 Iteration 3: Merge `('e', 'r')` → `er`
+🔹 **Iteration 3: Merge `('e', 'r')` → `er`**
 
 ```
 ['low', '</w>']
@@ -245,7 +246,7 @@ New tokens:
 ['low', 'er', '</w>']
 ```
 
-#### 🔹 Iteration 4: Merge `('low', 'er')` → `lower`
+🔹 **Iteration 4: Merge `('low', 'er')` → `lower`**
 
 ```
 ['low', '</w>']
@@ -261,7 +262,7 @@ New tokens:
 
 ---
 
-### 🧠 Tokenizing New Word:
+#### 🧠 Tokenizing New Word:
 
 Word: `"lowlower"`
 
@@ -273,15 +274,15 @@ If `"lowlowermost"` appears and is OOV:
 
 ---
 
-## 🔶 2. WordPiece Tokenization
+### 🔶 2. WordPiece Tokenization
 
-### ✅ Core Idea:
+#### ✅ Core Idea:
 
 Similar to BPE but instead of merging based on **frequency alone**, it merges based on **likelihood** (probability of the merged word improving the language model). It's used in **BERT**.
 
 ---
 
-### 🛠️ How WordPiece Works:
+#### 🛠️ How WordPiece Works:
 
 * Learns subword vocabulary from a corpus.
 * Uses **Maximum Likelihood Estimation (MLE)** to choose merges.
@@ -289,7 +290,7 @@ Similar to BPE but instead of merging based on **frequency alone**, it merges ba
 
 ---
 
-### 📌 Example:
+📌 **Example:**
 
 Suppose we have:
 
@@ -311,7 +312,7 @@ Each subword must exist in the vocab. If not, fallback is `[UNK]`.
 
 ---
 
-### 🔹 Comparison with BPE:
+### 🔹 Comparison BPE vs WordPiece:
 
 | Feature                | BPE                     | WordPiece                  |
 | ---------------------- | ----------------------- | -------------------------- |
@@ -322,7 +323,7 @@ Each subword must exist in the vocab. If not, fallback is `[UNK]`.
 
 ---
 
-## 🧪 HuggingFace Example (BERT = WordPiece, GPT = BPE)
+### 🧪 HuggingFace Example (BERT = WordPiece, GPT = BPE)
 
 ```python
 from transformers import AutoTokenizer
@@ -340,7 +341,7 @@ print(gpt_tokenizer.tokenize("unaffable"))
 
 ---
 
-## ✅ Summary
+### ✅ Summary
 
 | Tokenizer     | Type       | Used In          | Marker | Fallback         | Strength                             |
 | ------------- | ---------- | ---------------- | ------ | ---------------- | ------------------------------------ |
@@ -349,17 +350,17 @@ print(gpt_tokenizer.tokenize("unaffable"))
 
 ---
 
-# Visualization of Tokenization & Training our own Tokenizer
+### Visualization of Tokenization & Training our own Tokenizer
 
 ---
 
-## ✅ Part 1: **Visualization of Tokenization (Step-by-Step)**
+#### ✅ Part 1: **Visualization of Tokenization (Step-by-Step)**
 
 Let’s take the word **`unaffable`** and see how **BPE** and **WordPiece** process it.
 
 ---
 
-### 🔷 Word: `"unaffable"`
+##### 🔷 Word: `"unaffable"`
 
 Let’s assume this is our vocabulary:
 
@@ -367,7 +368,7 @@ Let’s assume this is our vocabulary:
 ['[UNK]', 'un', 'aff', 'able', '##aff', '##able']
 ```
 
-### 🟦 WordPiece Tokenization:
+##### 🟦 WordPiece Tokenization:
 
 | Step | Input         | Matching Token       | Output So Far               |
 | ---- | ------------- | -------------------- | --------------------------- |
@@ -403,13 +404,13 @@ Assume BPE merges:
 
 ---
 
-## ✅ Part 2: **Train Your Own Tokenizer from Scratch (HuggingFace Tokenizers)**
+### ✅ Part 2: **Train Your Own Tokenizer from Scratch (HuggingFace Tokenizers)**
 
 You can build your own BPE or WordPiece tokenizer using Hugging Face's `tokenizers` library (not `transformers`, but lower-level).
 
 ---
 
-### 🧰 Install Required Library
+#### 🧰 Install Required Library
 
 ```bash
 pip install tokenizers
