@@ -735,3 +735,256 @@ Input → RNN Layer 1 → RNN Layer 2 → RNN Layer 3 → Output
 | Still sequential & slow     | Transformer | Self-Attention + Parallelism |
 </details>
 
+<details>
+<summary>Sequence Model vs Sequence2Sequence Model</summary>
+
+# 1️⃣ What is a *Sequence Model*?
+
+### Definition
+
+A **sequence model** processes **ordered data** where **order matters**.
+
+It can:
+
+* Take a sequence as input
+* Produce **either a single output or another sequence**
+
+---
+
+## Types of Sequence Models (Big Picture)
+
+### 🔹 Many-to-One
+
+```
+Sequence → Single output
+```
+
+Example:
+
+* Sentiment analysis
+  `"I love this movie"` → **Positive**
+* Stock prices → Predict tomorrow’s price
+
+---
+
+### 🔹 One-to-Many
+
+```
+Single input → Sequence
+```
+
+Example:
+
+* Image → Caption
+* Music generation from a genre
+
+---
+
+### 🔹 Many-to-Many (Aligned)
+
+```
+Input sequence → Output sequence (same length)
+```
+
+Example:
+
+* POS tagging
+* Named Entity Recognition (NER)
+
+```
+"I love AI"
+ PRP VBP NNP
+```
+
+---
+
+### 🔹 Many-to-Many (Unaligned) → **Seq2Seq**
+
+```
+Input sequence → Output sequence (different length)
+```
+
+This is where **Seq2Seq lives**.
+
+---
+
+# 2️⃣ What is a Seq2Seq Model?
+
+### Definition
+
+A **Sequence-to-Sequence (Seq2Seq) model** maps:
+
+> **one sequence to another sequence of arbitrary length**
+
+Classic use cases:
+
+* Machine translation
+* Text summarization
+* Speech → text
+* Question → answer
+
+---
+
+## Key Characteristic of Seq2Seq
+
+* Input length ≠ output length
+* Requires **alignment** between input and output
+* Uses **encoder–decoder architecture**
+
+---
+
+# 3️⃣ Classical Seq2Seq Architecture
+
+```
+Encoder (RNN/LSTM/GRU)
+        ↓
+   Context / Memory
+        ↓
+Decoder (RNN/LSTM/GRU)
+```
+
+Example:
+
+```
+"I am eating an apple"  →  "Je mange une pomme"
+  (5 words)                 (4 words)
+```
+
+This **cannot** be handled by simple many-to-many tagging models.
+
+---
+
+# 4️⃣ How Seq2Seq Fits Inside Sequence Models
+
+### Important relationship
+
+> **All Seq2Seq models are sequence models
+> but not all sequence models are Seq2Seq models**
+
+---
+
+# 5️⃣ Concrete Example Comparison
+
+Let’s use **the same sentence**:
+
+```
+"I love AI"
+```
+
+---
+
+## Example A — Sequence Model (Many-to-One)
+
+### Task: Sentiment analysis
+
+```
+"I love AI" → Positive
+```
+
+* Output is **not a sequence**
+* No decoder needed
+
+---
+
+## Example B — Sequence Model (Many-to-Many aligned)
+
+### Task: POS tagging
+
+```
+"I love AI"
+ PRP VBP NNP
+```
+
+* One output per input token
+* No encoder–decoder split
+
+---
+
+## Example C — Seq2Seq Model
+
+### Task: Translation
+
+```
+"I love AI" → "J'aime l'IA"
+```
+
+* Output length differs
+* Requires decoder + attention
+* Requires alignment
+
+---
+
+# 6️⃣ Architectural Differences
+
+| Aspect        | Sequence Model    | Seq2Seq Model |
+| ------------- | ----------------- | ------------- |
+| Input         | Sequence          | Sequence      |
+| Output        | Single / sequence | Sequence      |
+| Output length | Fixed or same     | Variable      |
+| Encoder       | Optional          | Required      |
+| Decoder       | Optional          | Required      |
+| Alignment     | Not needed        | Needed        |
+| Attention     | Optional          | Critical      |
+
+---
+
+# 7️⃣ Historical Perspective
+
+### Before Seq2Seq
+
+* HMMs
+* CRFs
+* RNN taggers
+* Worked well for **aligned tasks**
+
+### Seq2Seq innovation
+
+* Solved **unaligned mapping**
+* Enabled translation & summarization
+* Introduced attention
+
+### Transformers
+
+* Generalized Seq2Seq
+* Unified all sequence modeling
+* Encoder-only (BERT)
+* Decoder-only (GPT)
+* Encoder–decoder (T5)
+
+---
+
+# 8️⃣ Modern View (Important)
+
+Today:
+
+* **BERT** → sequence model (many-to-many)
+* **GPT** → sequence model (many-to-one autoregressive)
+* **T5** → seq2seq model (text-to-text)
+
+Same core architecture, different usage.
+
+---
+
+# 9️⃣ Interview-Ready One-Liners ⭐
+
+* **Sequence model**:
+
+  > Any model that handles ordered data.
+
+* **Seq2Seq model**:
+
+  > A sequence model that maps one sequence to another sequence of variable length using an encoder–decoder.
+
+---
+
+# 10️⃣ Final Mental Model
+
+```
+Sequence Models
+ ├── Many-to-One
+ ├── One-to-Many
+ ├── Many-to-Many (aligned)
+ └── Seq2Seq (unaligned)
+```
+
+</details>
