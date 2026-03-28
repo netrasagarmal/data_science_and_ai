@@ -876,8 +876,6 @@ Suppose the model outputs this next-token distribution:
 ---
 
 
----
-
 <details>
 
 <summary> How Transofrmer Works/Thinks/Understands:</summary> 
@@ -1015,8 +1013,6 @@ Transformer models like GPT are pre-trained on massive datasets and fine-tuned f
 - Their ability to capture context and scale to massive sizes makes them the foundation of modern NLP systems like GPT, Claude, and LLaMA.
 
 </details>
-
----
 
 ---
 
