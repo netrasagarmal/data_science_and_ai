@@ -1,5 +1,6 @@
 # RAG (Retrieval-Augmented Generation) — Complete Study Notes
 
+![RAG Pipeline](/static/rag_pipeline.png)
 ---
 
 ## What is RAG and Why Does It Exist?
