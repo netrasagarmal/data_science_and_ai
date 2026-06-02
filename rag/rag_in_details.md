@@ -392,6 +392,757 @@ Query → Retrieve → [Is context relevant?] → YES → Generate → [Is answe
 
 ---
 
+> Traditional RAG assumes the answer exists in one or two retrieved chunks.
+
+In real enterprise systems, answers are often:
+
+* spread across multiple documents
+* require reasoning across sources
+* require iterative retrieval
+* require retrieval quality validation
+
+Let's go deep into each.
+
+---
+
+# 1. Multi-Hop Retrieval
+
+## What Problem Does It Solve?
+
+Traditional RAG:
+
+```text
+Question
+    ↓
+Single Retrieval
+    ↓
+Answer
+```
+
+works for:
+
+```text
+"What is the leave policy?"
+```
+
+because answer exists in one chunk.
+
+But consider:
+
+```text
+Which cloud provider hosts the application used by the Finance team?
+```
+
+The answer may require:
+
+Document A:
+
+```text
+Finance team uses SAP Analytics.
+```
+
+Document B:
+
+```text
+SAP Analytics is deployed on Azure.
+```
+
+Neither document alone contains the answer.
+
+Need:
+
+```text
+Hop 1:
+Finance Team
+    ↓
+SAP Analytics
+
+Hop 2:
+SAP Analytics
+    ↓
+Azure
+```
+
+Final answer:
+
+```text
+Finance team's application is hosted on Azure.
+```
+
+---
+
+# How Multi-Hop Retrieval Works
+
+```text
+User Question
+      ↓
+Retrieve Chunk A
+      ↓
+Extract Intermediate Entity
+      ↓
+New Query
+      ↓
+Retrieve Chunk B
+      ↓
+Combine Evidence
+      ↓
+Answer
+```
+
+---
+
+## Example
+
+Knowledge Base
+
+### Document 1
+
+```text
+CEO of OpenAI is Sam Altman.
+```
+
+### Document 2
+
+```text
+Sam Altman invested in Helion Energy.
+```
+
+Question:
+
+```text
+Which energy company has received investment from OpenAI's CEO?
+```
+
+---
+
+### Retrieval Step 1
+
+Search:
+
+```text
+OpenAI CEO
+```
+
+Retrieve:
+
+```text
+CEO = Sam Altman
+```
+
+---
+
+### Retrieval Step 2
+
+New query:
+
+```text
+Sam Altman investments
+```
+
+Retrieve:
+
+```text
+Helion Energy
+```
+
+---
+
+### Final Reasoning
+
+```text
+OpenAI CEO
+      ↓
+Sam Altman
+      ↓
+Helion Energy
+```
+
+Answer:
+
+```text
+Helion Energy
+```
+
+---
+
+# Enterprise Example
+
+Question:
+
+```text
+Which vendor provides the database used by the billing system?
+```
+
+---
+
+Hop 1:
+
+```text
+Billing System
+    ↓
+PostgreSQL
+```
+
+---
+
+Hop 2:
+
+```text
+PostgreSQL
+    ↓
+AWS RDS
+```
+
+---
+
+Hop 3:
+
+```text
+AWS RDS
+    ↓
+Amazon
+```
+
+Final answer:
+
+```text
+Amazon provides the database service.
+```
+
+---
+
+# Typical Implementation
+
+Using agent workflow:
+
+```python
+while answer_not_found:
+    retrieve()
+    extract_entity()
+    generate_new_query()
+```
+
+Very common in:
+
+* LangGraph
+* CrewAI
+* AutoGen
+* Agentic RAG
+
+---
+
+# 2. Cross-Document Retrieval
+
+People often confuse this with Multi-Hop.
+
+They are different.
+
+---
+
+## Multi-Hop
+
+Requires sequential reasoning.
+
+```text
+Doc A → Doc B → Answer
+```
+
+---
+
+## Cross-Document Retrieval
+
+Requires combining information from many documents simultaneously.
+
+```text
+Doc A
+Doc B
+Doc C
+ ↓
+Combined Answer
+```
+
+---
+
+## Example
+
+Question:
+
+```text
+Compare Azure, AWS and GCP pricing strategies.
+```
+
+Documents:
+
+### Doc A
+
+```text
+AWS pricing...
+```
+
+### Doc B
+
+```text
+Azure pricing...
+```
+
+### Doc C
+
+```text
+GCP pricing...
+```
+
+Need information from ALL documents.
+
+---
+
+Retrieval:
+
+```text
+AWS chunk
+Azure chunk
+GCP chunk
+```
+
+---
+
+LLM combines:
+
+```text
+AWS → Pay as you go
+
+Azure → Enterprise discounts
+
+GCP → Sustained usage discounts
+```
+
+---
+
+Final answer:
+
+Comparison table.
+
+---
+
+# Enterprise Example
+
+Question:
+
+```text
+Summarize all security incidents reported in 2025.
+```
+
+Incidents stored in:
+
+```text
+Incident_01.pdf
+Incident_02.pdf
+Incident_03.pdf
+...
+Incident_20.pdf
+```
+
+Need retrieval from:
+
+```text
+20 documents
+```
+
+then synthesis.
+
+This is cross-document retrieval.
+
+---
+
+# Multi-Hop vs Cross-Document
+
+| Multi-Hop                       | Cross-Document       |
+| ------------------------------- | -------------------- |
+| Sequential retrieval            | Parallel retrieval   |
+| A → B → C                       | A + B + C            |
+| Requires intermediate reasoning | Requires aggregation |
+| Agentic workflows common        | RAG synthesis common |
+
+---
+
+# 3. Corrective RAG (CRAG)
+
+CRAG = Corrective Retrieval-Augmented Generation
+
+Paper idea:
+
+> Before trusting retrieved documents, evaluate whether retrieval quality is good enough.
+
+Traditional RAG:
+
+```text
+Retrieve
+    ↓
+Generate
+```
+
+Problem:
+
+Bad retrieval → Hallucination
+
+---
+
+Example
+
+Question:
+
+```text
+What is Qdrant?
+```
+
+Retrieved chunk:
+
+```text
+Pinecone is a managed vector database.
+```
+
+Poor retrieval.
+
+Traditional RAG:
+
+```text
+Uses wrong chunk.
+```
+
+Produces bad answer.
+
+---
+
+CRAG introduces:
+
+```text
+Retrieve
+    ↓
+Evaluate Retrieval
+    ↓
+Good? → Continue
+Bad?  → Fix Retrieval
+```
+
+---
+
+# CRAG Workflow
+
+```text
+User Query
+      ↓
+Retrieve
+      ↓
+Evaluator
+      ↓
+Score
+      ↓
+Good?
+ ┌────┴─────┐
+ │          │
+Yes         No
+ │          │
+Generate   Re-Retrieve
+```
+
+---
+
+# Example
+
+Question:
+
+```text
+How does Hybrid Search work?
+```
+
+Retrieved docs:
+
+```text
+Document about OCR
+Document about Images
+```
+
+Evaluator says:
+
+```text
+Relevance = 0.2
+```
+
+Poor retrieval.
+
+---
+
+CRAG may:
+
+### Option 1
+
+Rewrite query
+
+```text
+Hybrid Search
+    ↓
+Dense + Sparse Retrieval
+```
+
+Retrieve again.
+
+---
+
+### Option 2
+
+Search web.
+
+---
+
+### Option 3
+
+Search another knowledge source.
+
+---
+
+### Option 4
+
+Increase retrieval depth.
+
+```text
+Top 5
+   ↓
+Top 20
+```
+
+---
+
+Then answer.
+
+---
+
+# Interview Explanation
+
+A strong answer:
+
+> CRAG adds a retrieval quality assessment layer. Instead of assuming retrieved documents are relevant, the system scores retrieval quality and triggers corrective actions such as query rewriting, re-retrieval, web search, or alternate knowledge source lookup before generation.
+
+---
+
+# 4. Self-RAG (Self-Reflection RAG)
+
+CRAG evaluates retrieval.
+
+Self-RAG evaluates itself.
+
+---
+
+Paper idea:
+
+LLM learns to ask:
+
+```text
+Do I need retrieval?
+Is retrieval sufficient?
+Should I retrieve more?
+Is my answer supported?
+```
+
+---
+
+Traditional RAG
+
+```text
+Retrieve
+Answer
+Done
+```
+
+---
+
+Self-RAG
+
+```text
+Retrieve
+↓
+Reflect
+↓
+Generate
+↓
+Reflect Again
+↓
+Revise
+```
+
+---
+
+# Example
+
+Question:
+
+```text
+What are the security controls used by the payment system?
+```
+
+Retrieved:
+
+```text
+Encryption at rest
+Role-based access control
+```
+
+---
+
+LLM Reflection
+
+```text
+Do I have enough information?
+
+No.
+```
+
+---
+
+Retrieves again.
+
+Finds:
+
+```text
+MFA
+Audit Logging
+```
+
+---
+
+Now answer.
+
+---
+
+# Self-RAG Reflection Tokens
+
+Paper introduces special decisions:
+
+```text
+Retrieve?
+```
+
+```text
+Relevant?
+```
+
+```text
+Supported?
+```
+
+```text
+Complete?
+```
+
+---
+
+Example Flow
+
+```text
+Question
+    ↓
+Need Retrieval?
+    ↓
+Retrieve
+    ↓
+Relevant?
+    ↓
+Generate Draft
+    ↓
+Supported?
+    ↓
+Final Answer
+```
+
+---
+
+# Example
+
+Question:
+
+```text
+How does our company deploy AI models?
+```
+
+Retrieved:
+
+```text
+Chunk about model deployment
+```
+
+Draft answer generated.
+
+Reflection step:
+
+```text
+Is every claim supported?
+```
+
+Finds:
+
+```text
+Claim:
+Uses Kubernetes
+
+Evidence:
+Missing
+```
+
+Answer revised:
+
+```text
+According to available documentation...
+```
+
+instead of hallucinating.
+
+---
+
+# CRAG vs Self-RAG
+
+This is a favorite interview question.
+
+| CRAG                       | Self-RAG                                |
+| -------------------------- | --------------------------------------- |
+| Focus on retrieval quality | Focus on retrieval + generation quality |
+| External evaluator         | LLM self-reflection                     |
+| Correct bad retrieval      | Correct reasoning and retrieval         |
+| Simpler                    | More advanced                           |
+| Retrieval-centric          | End-to-end self-checking                |
+
+---
+
+# How Modern Agentic RAG Combines All Four
+
+A production-grade enterprise agent may look like:
+
+```text
+User Query
+     ↓
+Query Rewriting
+     ↓
+Multi-Hop Retrieval
+     ↓
+Cross-Document Retrieval
+     ↓
+CRAG Evaluation
+     ↓
+If Poor Retrieval
+      └── Re-search
+     ↓
+Context Assembly
+     ↓
+LLM Generation
+     ↓
+Self-RAG Reflection
+     ↓
+Evidence Verification
+     ↓
+Final Answer
+```
+
+This is close to how advanced enterprise knowledge assistants, AI copilots, and research agents are built today: multi-hop retrieval discovers missing evidence, cross-document retrieval aggregates evidence, CRAG validates retrieval quality, and Self-RAG validates whether the final answer is actually supported by that evidence.
+
+
+
 ## Summary: When to Use What
 
 | Technique | Use when... |
@@ -409,4 +1160,1439 @@ Query → Retrieve → [Is context relevant?] → YES → Generate → [Is answe
 | Agentic RAG | Multi-source synthesis, dynamic workflows, complex research tasks |
 
 ---
+</details>
+
+---
+
+<details>
+<summary>Multi Model Rag Systems</summary>
+This is one of the most important design decisions in Multimodal RAG.
+
+Many engineers make the mistake of treating everything as text and storing OCR output only. In production-grade multimodal RAG systems, the storage, embedding, and retrieval strategy depends heavily on the content type.
+
+---
+
+# First Principle
+
+For every modality ask:
+
+1. What should be stored?
+2. What should be embedded?
+3. Where should the original content live?
+4. How should retrieval happen?
+
+A common architecture is:
+
+```text
+                 Raw Files
+                      │
+                      ▼
+                Object Storage
+         (S3, Azure Blob, GCS, MinIO)
+                      │
+                      ▼
+              Extraction Pipeline
+                      │
+      ┌───────────────┼───────────────┐
+      ▼               ▼               ▼
+   Text          Tables          Images
+      │               │               │
+      ▼               ▼               ▼
+  Embeddings     Embeddings     Embeddings
+      │               │               │
+      └──────► Vector Database ◄──────┘
+                    (Qdrant)
+
+Metadata:
+{
+ file_id,
+ page_no,
+ chunk_type,
+ object_storage_path
+}
+```
+
+---
+
+# 1. Tables from PDF / Documents
+
+This is the most misunderstood part of RAG.
+
+---
+
+## Wrong Approach
+
+```text
+Revenue | 2023 | 100M
+Revenue | 2024 | 120M
+```
+
+Convert to plain text and embed.
+
+Problem:
+
+```text
+What was revenue growth?
+```
+
+Vector similarity often fails because table relationships are lost.
+
+---
+
+# Strategy 1: Table → Natural Language
+
+Convert table to descriptive text.
+
+Example table:
+
+| Year | Revenue |
+| ---- | ------- |
+| 2023 | 100M    |
+| 2024 | 120M    |
+
+Convert to:
+
+```text
+Company revenue was 100 million in 2023
+and increased to 120 million in 2024,
+representing 20 percent growth.
+```
+
+Embed this text.
+
+### Pros
+
+Simple
+
+### Cons
+
+May lose detail
+
+---
+
+# Strategy 2: Store Structured Table + Summary
+
+Production systems often store:
+
+```python
+{
+  "table_json": {
+      ...
+  },
+
+  "table_summary":
+  "Revenue increased from 100M to 120M..."
+}
+```
+
+Embed only summary.
+
+Store actual table separately.
+
+---
+
+# Strategy 3: Table-Aware Embeddings (Recommended)
+
+Modern approach.
+
+Extract table as:
+
+```python
+DataFrame
+```
+
+Generate:
+
+```python
+table_summary
+```
+
+Store:
+
+```text
+Vector DB:
+    summary embedding
+
+Object Store:
+    original table
+
+Metadata:
+    table_id
+```
+
+---
+
+# Extraction Models
+
+Popular options:
+
+### OCR PDFs
+
+* PaddleOCR
+* Azure Document Intelligence
+* Google Document AI
+* Amazon Textract
+
+### Native PDFs
+
+* Camelot
+* Tabula
+* pdfplumber
+* Unstructured.io
+
+### Advanced
+
+* Microsoft Table Transformer (TATR)
+* Docling
+* MinerU
+
+---
+
+# Embedding Models for Tables
+
+Most teams don't directly embed tables.
+
+Instead:
+
+```text
+Table
+   ↓
+LLM Summary
+   ↓
+Text Embedding
+```
+
+Models:
+
+* OpenAI text-embedding-3-large
+* BGE-M3
+* Voyage-3
+* Jina Embeddings v3
+
+---
+
+# Retrieval Flow
+
+```text
+Question
+   ↓
+Vector Search
+   ↓
+Table Summary Match
+   ↓
+Get table_id
+   ↓
+Load original table
+   ↓
+Pass to LLM
+```
+
+---
+
+# 2. Images inside PDF
+
+Suppose PDF contains:
+
+```text
+Page 1: Text
+Page 2: Architecture Diagram
+Page 3: Screenshot
+```
+
+Text embeddings alone miss the image meaning.
+
+---
+
+# Standard Practice
+
+Extract image separately.
+
+Store:
+
+```python
+{
+    image_id,
+    pdf_id,
+    page_no,
+    image_path
+}
+```
+
+---
+
+# Generate Image Caption
+
+Use VLM:
+
+Examples:
+
+* GPT-4o
+* GPT-4.1 Vision
+* Gemini
+* Claude Vision
+* Qwen-VL
+* InternVL
+
+Generate:
+
+```text
+The diagram shows a RAG architecture
+consisting of ingestion, vector storage,
+retrieval and generation stages.
+```
+
+Embed caption.
+
+---
+
+# Store
+
+Vector DB:
+
+```python
+{
+   image_id,
+   caption_embedding
+}
+```
+
+Object Storage:
+
+```text
+s3://bucket/image123.png
+```
+
+---
+
+# Better Approach: Multi-Vector Retrieval
+
+Store:
+
+```text
+Caption Embedding
+
++
+Image Embedding
+```
+
+---
+
+# Image Embedding Models
+
+### OpenAI
+
+* text-embedding-3-large (caption route)
+
+### CLIP Family
+
+* CLIP
+* OpenCLIP
+
+### Modern Multimodal
+
+* SigLIP
+* ColPali
+* ColQwen
+* Jina CLIP v2
+
+---
+
+# Retrieval
+
+```text
+Question
+    ↓
+Embedding
+    ↓
+Search Image Captions
+    ↓
+Retrieve image
+    ↓
+Send image to VLM
+```
+
+or
+
+```text
+Question
+     ↓
+Cross-modal embedding
+     ↓
+Direct image retrieval
+```
+
+---
+
+# 3. Image-Only Documents
+
+Example:
+
+```text
+Medical image
+Satellite image
+Invoice image
+Photo
+Engineering drawing
+```
+
+No text exists.
+
+---
+
+# Strategy 1: Caption-Based Retrieval
+
+Generate:
+
+```text
+A chest X-ray showing...
+```
+
+Embed caption.
+
+Simple.
+
+---
+
+# Strategy 2: Visual Embedding Retrieval
+
+Recommended.
+
+Generate image embedding directly.
+
+Models:
+
+### CLIP
+
+```text
+Image -> vector
+Text -> vector
+```
+
+Same embedding space.
+
+---
+
+Example:
+
+```text
+Query:
+"dog playing in snow"
+
+Text Embedding
+       ↓
+
+Search
+
+Image Embeddings
+```
+
+Works without OCR.
+
+---
+
+# Best Models Today
+
+### General
+
+* SigLIP
+* OpenCLIP
+* Jina CLIP
+* Nomic Vision
+
+### Document Images
+
+* ColPali
+* ColQwen
+
+These are becoming very popular in document RAG.
+
+Reason:
+
+No OCR required.
+
+They understand:
+
+* tables
+* charts
+* screenshots
+* scanned docs
+
+directly.
+
+---
+
+# ColPali Architecture
+
+Instead of:
+
+```text
+Image
+ ↓
+OCR
+ ↓
+Embedding
+```
+
+Use:
+
+```text
+Image
+ ↓
+ColPali
+ ↓
+Embedding
+```
+
+Much better retrieval.
+
+---
+
+# 4. Videos
+
+Video is actually:
+
+```text
+Video
+ =
+
+Frames
+ +
+Audio
+ +
+Temporal Context
+```
+
+Treating video as one embedding is usually a mistake.
+
+---
+
+# Standard Production Pipeline
+
+```text
+Video
+   │
+   ├── Extract Audio
+   │
+   ├── Extract Key Frames
+   │
+   └── Scene Detection
+```
+
+---
+
+# Audio Processing
+
+Convert speech:
+
+```text
+Audio
+  ↓
+Whisper
+  ↓
+Transcript
+```
+
+Embed transcript chunks.
+
+---
+
+# Visual Processing
+
+Extract frames:
+
+```text
+Every 5 sec
+
+or
+
+Scene Change
+```
+
+Example:
+
+```text
+Frame 1
+Frame 2
+Frame 3
+```
+
+Generate captions.
+
+```text
+A person demonstrates a transformer architecture.
+```
+
+Embed captions.
+
+---
+
+# Storage
+
+Object Storage:
+
+```text
+video.mp4
+```
+
+Metadata:
+
+```python
+{
+   timestamp: 120,
+   frame_id: 45,
+   video_id: xyz
+}
+```
+
+Vector DB:
+
+```python
+{
+   transcript_embedding
+}
+
+{
+   frame_caption_embedding
+}
+```
+
+---
+
+# Advanced Video RAG
+
+Store multiple vectors:
+
+```text
+Transcript Vector
+
+Frame Vector
+
+Scene Summary Vector
+```
+
+---
+
+# Video Embedding Models
+
+### Audio
+
+* Whisper
+* Whisper Large V3
+
+### Frame/Image
+
+* CLIP
+* SigLIP
+* ColQwen
+
+### End-to-End Video
+
+* VideoCLIP
+* Video-LLaVA
+* InternVideo
+* VideoPrism
+
+---
+
+# What Most Enterprise Multimodal RAG Systems Do Today
+
+For PDFs containing text + tables + images:
+
+```text
+PDF
+│
+├── Text Chunks
+│      ↓
+│   Text Embedding
+│
+├── Tables
+│      ↓
+│   LLM Summary
+│      ↓
+│   Embedding
+│
+├── Images
+│      ↓
+│   VLM Caption
+│      ↓
+│   Embedding
+│
+└── Original Assets
+       ↓
+   S3/Blob Storage
+```
+
+Store all embeddings in a single collection:
+
+```python
+payload = {
+    "type": "text" | "table" | "image",
+    "page": 10,
+    "source_file": "annual_report.pdf",
+    "object_path": "s3://..."
+}
+```
+
+At query time:
+
+```text
+User Query
+     ↓
+Hybrid Retrieval
+     ↓
+Text Matches
+     +
+Table Matches
+     +
+Image Matches
+     ↓
+Reranking
+     ↓
+Context Assembly
+     ↓
+LLM/VLM
+```
+</details>
+
+---
+
+<details>
+<summary>Scenario Based Questions</summary>
+These are exactly the types of architecture and system design questions that are now being asked in Senior AI Engineer / GenAI Engineer / AI Architect interviews.
+
+The interviewer is usually not testing whether you know a specific library. They are testing whether you understand:
+
+* Data extraction strategy
+* Multimodal representation
+* Storage architecture
+* Retrieval architecture
+* Tradeoffs
+* Scalability
+
+A 5-6 year experienced engineer should answer at architecture level first and implementation level second.
+
+---
+
+# Scenario 1
+
+## Interview Question
+
+> Suppose a PDF page contains text, tables and images together. How would you extract, store, embed and retrieve that information in a RAG system?
+
+---
+
+# How I would answer
+
+First, I would not treat the PDF as a single text document because text, tables and images have different semantic characteristics and retrieval requirements.
+
+My approach would be to separate the extraction pipeline by modality and then unify them during retrieval.
+
+---
+
+# Step 1: Document Parsing
+
+Suppose page contains:
+
+```text
+------------------------------------------------
+Revenue Report 2024
+
+Text:
+Revenue increased significantly this year.
+
+Table:
+Year     Revenue
+2023     100M
+2024     120M
+
+Image:
+Revenue growth chart
+------------------------------------------------
+```
+
+I would use a document intelligence system such as:
+
+* Azure Document Intelligence
+* Google Document AI
+* Docling
+* MinerU
+* Unstructured
+
+to extract page layout information.
+
+The parser should identify:
+
+```python
+{
+    page_no:1,
+
+    text_blocks:[...],
+
+    tables:[...],
+
+    images:[...]
+}
+```
+
+At this stage I preserve document structure.
+
+---
+
+# Step 2: Text Processing
+
+For text blocks:
+
+```text
+Revenue increased significantly this year.
+```
+
+I perform:
+
+```text
+Cleaning
+↓
+Semantic Chunking
+↓
+Embedding
+```
+
+Example:
+
+```python
+{
+    type:"text",
+    page:1,
+    content:"Revenue increased significantly..."
+}
+```
+
+Embedding:
+
+```python
+text-embedding-3-large
+BGE-M3
+Voyage
+```
+
+Store in Qdrant.
+
+---
+
+# Step 3: Table Processing
+
+This is where many systems fail.
+
+I do NOT directly flatten tables into text and embed.
+
+Instead:
+
+Extract:
+
+```python
+{
+    "Year": [2023,2024],
+    "Revenue":[100,120]
+}
+```
+
+Generate table summary using LLM:
+
+```text
+Revenue increased from 100M in 2023
+to 120M in 2024 representing
+20% growth.
+```
+
+Store:
+
+```python
+{
+    table_id,
+    raw_table_json,
+    table_summary
+}
+```
+
+Embed:
+
+```text
+table_summary
+```
+
+Store original table separately.
+
+Reason:
+
+* retrieval becomes easier
+* numerical relationships preserved
+
+---
+
+# Step 4: Image Processing
+
+For image/chart:
+
+```text
+Revenue Growth Chart
+```
+
+I extract image.
+
+Store image in object storage:
+
+```text
+S3
+Azure Blob
+GCS
+```
+
+Generate image description using VLM:
+
+```text
+The chart shows revenue growth
+from 100M in 2023 to 120M in 2024.
+```
+
+Generate embedding from:
+
+```text
+caption
+```
+
+or
+
+```text
+caption + image embedding
+```
+
+Store in vector DB.
+
+---
+
+# Final Storage Design
+
+## Vector Database
+
+```python
+[
+ {
+   id:"txt_1",
+   type:"text",
+   embedding:[...]
+ },
+
+ {
+   id:"tbl_1",
+   type:"table",
+   embedding:[...]
+ },
+
+ {
+   id:"img_1",
+   type:"image",
+   embedding:[...]
+ }
+]
+```
+
+---
+
+## Object Storage
+
+```text
+pdfs/
+images/
+tables/
+```
+
+Store original assets.
+
+---
+
+# Metadata Design
+
+```python
+{
+   document_id,
+   page_number,
+   chunk_type,
+   object_path,
+   source_pdf
+}
+```
+
+This becomes extremely important later.
+
+---
+
+# Retrieval Flow
+
+User asks:
+
+```text
+How much revenue growth occurred in 2024?
+```
+
+Query embedding generated.
+
+Search Qdrant.
+
+Potential matches:
+
+```text
+Text Chunk
+Table Summary
+Image Caption
+```
+
+Top results:
+
+```text
+1. Table Summary
+2. Chart Caption
+3. Text Paragraph
+```
+
+Then:
+
+```text
+table_id found
+↓
+load raw table
+↓
+image_id found
+↓
+load image
+```
+
+Final context:
+
+```text
+Text
++
+Table
++
+Image
+```
+
+sent to GPT-4o or Gemini.
+
+---
+
+# Architecture Diagram
+
+```text
+PDF
+ │
+ ├── Text
+ │      ↓
+ │   Chunking
+ │      ↓
+ │   Embedding
+ │
+ ├── Tables
+ │      ↓
+ │   Summary
+ │      ↓
+ │   Embedding
+ │
+ ├── Images
+ │      ↓
+ │   Caption
+ │      ↓
+ │   Embedding
+ │
+ └─────────────► Qdrant
+
+Raw Assets
+     ↓
+S3 / Blob Storage
+```
+
+---
+
+# Why This Is Good
+
+Because:
+
+* Each modality optimized separately
+* Original fidelity preserved
+* Retrieval quality improved
+* Scales to millions of documents
+
+---
+
+# Scenario 2
+
+## Interview Question
+
+> Design a multimodal RAG system where users can upload documents, tables, images and reference videos, and during chat the system should retrieve the most relevant content regardless of modality.
+
+---
+
+# How I Would Answer
+
+I would design it as a multimodal knowledge platform rather than a traditional text-only RAG system.
+
+The key principle is:
+
+```text
+Everything becomes retrievable
+through a common semantic layer.
+```
+
+---
+
+# High-Level Architecture
+
+```text
+                User Upload
+                      │
+ ┌──────────────┬─────┴─────┬─────────────┐
+ │              │           │             │
+ PDF          Images      Tables       Videos
+ │              │           │             │
+ └──────────────┴───────────┴─────────────┘
+                      │
+               Processing Layer
+                      │
+             Embedding Generation
+                      │
+                 Vector DB
+                      │
+                  Chat Layer
+```
+
+---
+
+# Ingestion Pipeline
+
+---
+
+## Document Text
+
+Extract:
+
+```text
+Paragraphs
+Sections
+Headers
+```
+
+Perform:
+
+```text
+Semantic Chunking
+Embedding
+Store
+```
+
+---
+
+## Tables
+
+Extract:
+
+```text
+Structured Table
+```
+
+Generate:
+
+```text
+Table Summary
+```
+
+Store:
+
+```text
+Raw Table
++
+Summary Embedding
+```
+
+---
+
+## Images
+
+Generate:
+
+```text
+Caption
+```
+
+Store:
+
+```text
+Image File
+Caption Embedding
+```
+
+Optional:
+
+```text
+CLIP embedding
+```
+
+---
+
+## Videos
+
+Videos require special handling.
+
+---
+
+### Step 1
+
+Extract audio.
+
+```text
+Video
+ ↓
+Audio
+```
+
+---
+
+### Step 2
+
+Transcribe.
+
+```text
+Whisper
+ ↓
+Transcript
+```
+
+---
+
+### Step 3
+
+Extract keyframes.
+
+```text
+Frame every N seconds
+```
+
+or
+
+```text
+Scene Change Detection
+```
+
+---
+
+### Step 4
+
+Caption keyframes.
+
+```text
+Frame Caption
+```
+
+---
+
+### Store
+
+```python
+{
+   transcript_embedding
+}
+
+{
+   frame_caption_embedding
+}
+
+{
+   scene_summary_embedding
+}
+```
+
+---
+
+# Storage Design
+
+---
+
+## Vector DB (Qdrant)
+
+```python
+{
+  id,
+  modality,
+  embedding,
+  metadata
+}
+```
+
+Example:
+
+```python
+{
+  id:"img_22",
+  modality:"image"
+}
+```
+
+```python
+{
+  id:"tbl_31",
+  modality:"table"
+}
+```
+
+```python
+{
+  id:"vid_11",
+  modality:"video"
+}
+```
+
+---
+
+## Object Storage
+
+Store originals.
+
+```text
+s3://docs
+s3://images
+s3://videos
+s3://tables
+```
+
+Never store large binaries in vector DB.
+
+---
+
+# Retrieval Phase
+
+Suppose user asks:
+
+```text
+Show me how invoice approval workflow works.
+```
+
+The answer may exist in:
+
+* document text
+* architecture diagram image
+* process video
+
+all simultaneously.
+
+---
+
+# Retrieval Strategy
+
+I would use hybrid multimodal retrieval.
+
+```text
+Query
+ ↓
+Embedding
+ ↓
+Vector Search
+```
+
+Results:
+
+```text
+Text Chunk
+Table Summary
+Image Caption
+Video Transcript
+```
+
+Retrieved together.
+
+---
+
+# Reranking
+
+Apply reranker.
+
+Example:
+
+```text
+Cohere Rerank
+BGE Reranker
+Jina Reranker
+```
+
+Across all modalities.
+
+---
+
+# Context Assembly
+
+Build final context:
+
+```text
+Relevant Text
+
+Relevant Table
+
+Relevant Image
+
+Relevant Video Segment
+```
+
+For video:
+
+```text
+Timestamp:
+12:30 - 13:20
+```
+
+included.
+
+---
+
+# Final Generation
+
+Use multimodal LLM:
+
+* GPT-4o
+* Gemini 2.5
+* Claude Opus Vision
+
+Provide:
+
+```text
+Text
++
+Images
++
+Tables
++
+Video References
+```
+
+to generate final answer.
+
+---
+
+# What Would Impress Me As An Interviewer
+
+A senior engineer should conclude with:
+
+> I would not store raw PDFs, tables, images, or videos directly in the vector database. I would store embeddings and metadata in Qdrant, keep original assets in object storage such as S3, and use metadata references to reconstruct the relevant multimodal context at retrieval time. This separation of retrieval layer and storage layer is the standard enterprise architecture because it improves scalability, cost efficiency, and retrieval quality.
+
+That final statement signals that you understand real-world multimodal RAG architecture rather than just vector search.
+
+
+---
+
+
+These four concepts are extremely important because they address one of the biggest limitations of traditional RAG:
+
+
+</details>
+
+---
+
+<details>
+<summary></summary>
+
 </details>
