@@ -146,12 +146,14 @@ And **mixes them** to understand its context.
 
 That’s it.
 
+</details>
+
 ---
+
 ## **Self-Attention** vs **Multi-Head Attention**
 
----
 
-### 1️⃣ What problem are we solving?
+### What problem are we solving?
 
 When processing a sentence, **each word should understand which other words are important to it**.
 
@@ -166,7 +168,9 @@ Attention helps the model **focus on the right words**.
 
 ---
 
-### 2️⃣ Self-Attention (Single Head)
+### Self-Attention (Single Head)
+
+<details>
 
 #### 🔹 Idea (Plain English)
 
@@ -198,7 +202,7 @@ Each word asks:
 
 ---
 
-### 3️⃣ Self-Attention — The Math (Simplified)
+### Self-Attention — The Math (Simplified)
 
 Assume we have **word embeddings**:
 
@@ -255,7 +259,7 @@ $$
 
 ---
 
-### 4️⃣ Why Self-Attention Alone Is Not Enough?
+### Why Self-Attention Alone Is Not Enough?
 
 Single attention focuses on **one type of relationship**.
 
@@ -268,28 +272,371 @@ But language has **multiple relationships at once**:
 
 👉 This is where **Multi-Head Attention** helps.
 
----
-
-### 5️⃣ Multi-Head Attention
-
-#### 🔹 Idea (Plain English)
-
-Instead of **one attention mechanism**, use **multiple attentions in parallel**, each learning **different patterns**.
-
-Example sentence:
-
-> “She gave her dog food”
-
-Different heads focus on:
-
-* Head 1 → grammar
-* Head 2 → ownership (“her”)
-* Head 3 → action (“gave”)
-* Head 4 → object (“dog food”)
+</details>
 
 ---
 
-### 6️⃣ Multi-Head Attention — How It Works
+### Multi-Head Attention
+
+<details>
+
+## First Understand the Limitation of Single-Head Self-Attention
+
+Sentence:
+
+> **"She gave her dog food"**
+
+Suppose we're looking at the word:
+
+```
+gave
+```
+
+With **single-head attention**, the word "gave" computes **one set of attention weights**:
+
+| Word | Attention Weight |
+| ---- | ---------------- |
+| She  | 0.30             |
+| gave | 0.10             |
+| her  | 0.15             |
+| dog  | 0.20             |
+| food | 0.25             |
+
+This produces **one context representation**.
+
+The problem is:
+
+> The model is forced to combine all relationships into one attention pattern.
+
+It tries to simultaneously understand:
+
+* Who performed the action?
+* What was given?
+* Who owns the dog?
+* Grammar structure?
+
+using only **one attention map**.
+
+---
+
+# 2️⃣ Multi-Head Attention Solves This
+
+Instead of one attention mechanism:
+
+```
+Self-Attention
+```
+
+we create:
+
+```
+Head 1
+Head 2
+Head 3
+Head 4
+```
+
+Each head learns independently.
+
+---
+
+# 3️⃣ Think Like Multiple Experts
+
+Imagine analyzing a sentence using a team of experts.
+
+Sentence:
+
+> "She gave her dog food"
+
+---
+
+### Expert 1: Grammar Expert
+
+Looks for:
+
+* Subject
+* Verb
+* Object
+
+Focuses on:
+
+```
+She ↔ gave
+gave ↔ food
+```
+
+---
+
+### Expert 2: Ownership Expert
+
+Looks for:
+
+```
+her ↔ dog
+```
+
+This head learns possessive relationships.
+
+---
+
+### Expert 3: Action Expert
+
+Looks for:
+
+```
+gave ↔ food
+gave ↔ dog
+```
+
+Understanding who received what.
+
+---
+
+### Expert 4: Context Expert
+
+Looks at the entire sentence meaning.
+
+---
+
+Each expert produces its own understanding.
+
+Then we combine them.
+
+---
+
+# 4️⃣ Same Example Visually
+
+Sentence:
+
+```
+She gave her dog food
+```
+
+---
+
+### Head 1 (Grammar)
+
+```
+gave
+ ↓
+She
+ ↓
+food
+```
+
+Learns:
+
+> She is the subject and food is the object.
+
+---
+
+### Head 2 (Ownership)
+
+```
+her
+ ↓
+dog
+```
+
+Learns:
+
+> The dog belongs to her.
+
+---
+
+### Head 3 (Action)
+
+```
+gave
+ ↓
+dog
+ ↓
+food
+```
+
+Learns:
+
+> Food is being given to the dog.
+
+---
+
+### Head 4 (Global Context)
+
+```
+She ↔ gave ↔ her ↔ dog ↔ food
+```
+
+Learns overall meaning.
+
+---
+
+# 5️⃣ Why Not Just Use One Bigger Head?
+
+A common interview question.
+
+Suppose embedding size = 512.
+
+Option A:
+
+```
+1 Head
+512 dimensions
+```
+
+Option B:
+
+```
+8 Heads
+64 dimensions each
+```
+
+Research found:
+
+> Multiple smaller attention spaces learn richer relationships than one giant attention space.
+
+Different heads specialize automatically.
+
+No one tells them:
+
+```
+You learn grammar.
+You learn ownership.
+```
+
+They discover it during training.
+
+---
+
+# 6️⃣ Real Example: Pronoun Resolution
+
+Sentence:
+
+> "The animal didn't cross the road because it was tired."
+
+Question:
+
+Who is **"it"**?
+
+---
+
+### Head 1
+
+May focus on:
+
+```
+it ↔ animal
+```
+
+---
+
+### Head 2
+
+May focus on:
+
+```
+cross ↔ road
+```
+
+---
+
+### Head 3
+
+May focus on:
+
+```
+tired ↔ animal
+```
+
+---
+
+Together they conclude:
+
+```
+it = animal
+```
+
+---
+
+# 7️⃣ What Happens Mathematically?
+
+For self-attention:
+
+```
+Q
+K
+V
+```
+
+One attention operation:
+
+```
+softmax(QKᵀ)V
+```
+
+---
+
+For multi-head attention:
+
+Each head gets its own:
+
+```
+Q1 K1 V1
+Q2 K2 V2
+Q3 K3 V3
+Q4 K4 V4
+```
+
+Each computes:
+
+```
+Head1 = Attention(Q1,K1,V1)
+
+Head2 = Attention(Q2,K2,V2)
+
+Head3 = Attention(Q3,K3,V3)
+
+Head4 = Attention(Q4,K4,V4)
+```
+
+Then:
+
+```
+Concatenate(
+ Head1,
+ Head2,
+ Head3,
+ Head4
+)
+```
+
+and project back to the original size.
+
+---
+
+# 8️⃣ The Best Intuition
+
+### Self-Attention
+
+Imagine reading a document with **one highlighter**.
+
+You can mark important words, but only from one perspective.
+
+---
+
+### Multi-Head Attention
+
+Imagine reading the same document with:
+
+* Yellow highlighter → grammar
+* Blue highlighter → ownership
+* Green highlighter → actions
+* Pink highlighter → overall meaning
+
+Now you capture multiple types of information simultaneously.
+
+---
+
+### Multi-Head Attention — How It Works
 
 Assume:
 
@@ -379,12 +726,608 @@ Word → Grammar lens
 
   > Each word looks at other words from multiple perspectives simultaneously.
 
+## Interview-Friendly Definition
+
+### Self-Attention
+
+> Each token looks at all other tokens and learns which ones are important for building its contextual representation.
+
+### Multi-Head Attention
+
+> Multi-head attention runs several independent self-attention mechanisms in parallel, allowing the model to learn different types of relationships (syntax, semantics, coreference, long-range dependencies, etc.) simultaneously and then combine them into a richer representation.
+
 ---
 
-Great question — this is a **very common confusion**, so let’s clear it cleanly and precisely.
+</details>
 
 ---
-## ❓`Suppose if there are 10 words, so in self attension does any word at position n just looks at words at n-1 and n+1 or all the words before and after it?`
+
+#### `how are number of head determined ?`
+
+<details>
+Excellent question. The number of heads is **not learned by the model**. It is a **hyperparameter chosen by the model designer**.
+
+---
+
+# Short Answer
+
+The number of heads (`num_heads`) is chosen such that:
+
+[
+d_{model} \mod num_heads = 0
+]
+
+because the embedding dimension must be split evenly across all heads.
+
+Example:
+
+```
+d_model = 512
+num_heads = 8
+
+head_dim = 512 / 8 = 64
+```
+
+Each head gets a 64-dimensional view of the data.
+
+---
+
+# Why do we need multiple heads?
+
+Suppose:
+
+```
+d_model = 512
+```
+
+Using only 1 head:
+
+```
+1 head × 512 dimensions
+```
+
+The model learns one attention pattern.
+
+Using 8 heads:
+
+```
+8 heads × 64 dimensions
+```
+
+Now the model can learn 8 different attention patterns simultaneously.
+
+For example:
+
+```
+Head 1 → Subject-Verb relation
+Head 2 → Object relation
+Head 3 → Pronoun resolution
+Head 4 → Long-range dependency
+Head 5 → Position information
+...
+```
+
+The heads aren't manually assigned these jobs—they emerge during training.
+
+---
+
+# Why not use 100 heads?
+
+Assume:
+
+```
+d_model = 512
+num_heads = 100
+```
+
+Then:
+
+```
+head_dim = 512 / 100 ≈ 5
+```
+
+Each head gets only ~5 dimensions.
+
+That's too little capacity.
+
+Each head becomes weak.
+
+---
+
+# Why not use 1 head?
+
+Assume:
+
+```
+d_model = 512
+num_heads = 1
+```
+
+Then:
+
+```
+head_dim = 512
+```
+
+One head has lots of capacity, but only one perspective.
+
+The model loses specialization.
+
+---
+
+# The Trade-off
+
+More heads:
+
+✅ More perspectives
+
+❌ Smaller dimension per head
+
+---
+
+Fewer heads:
+
+✅ Larger dimension per head
+
+❌ Fewer perspectives
+
+---
+
+The goal is to balance:
+
+```
+head_dim = d_model / num_heads
+```
+
+Typically:
+
+```
+head_dim ≈ 64
+```
+
+This is a common design choice in many Transformer models.
+
+---
+
+# Real Model Examples
+
+| Model                       | d_model | Heads | Head Dim |
+| --------------------------- | ------- | ----- | -------- |
+| Original Transformer (2017) | 512     | 8     | 64       |
+| BERT Base                   | 768     | 12    | 64       |
+| BERT Large                  | 1024    | 16    | 64       |
+| GPT-2 Small                 | 768     | 12    | 64       |
+| GPT-3 175B                  | 12288   | 96    | 128      |
+| Llama 2 7B                  | 4096    | 32    | 128      |
+| Llama 3 8B                  | 4096    | 32    | 128      |
+
+Notice a pattern:
+
+```
+head_dim ≈ 64–128
+```
+
+Researchers usually keep head dimensions in that range and adjust the number of heads accordingly.
+
+---
+
+# What Actually Happens Internally?
+
+Suppose:
+
+```
+Sentence: "I love AI"
+
+Embedding size = 8
+Heads = 2
+```
+
+The model splits the embedding:
+
+```
+[I love AI]
+
+Head 1 sees dimensions:
+[0,1,2,3]
+
+Head 2 sees dimensions:
+[4,5,6,7]
+```
+
+Each head creates its own:
+
+```
+Q
+K
+V
+```
+
+and computes attention independently.
+
+Then all head outputs are concatenated back together.
+
+---
+
+# Modern Research Insight
+
+A surprising discovery is that:
+
+> Not all heads are equally useful.
+
+In large models:
+
+* Some heads specialize strongly.
+* Some heads become redundant.
+* Some heads can even be removed with little performance loss.
+
+This led to newer ideas such as:
+
+* Multi-Query Attention (MQA)
+* Grouped Query Attention (GQA, used in Llama 3)
+* Sparse Attention
+* Head Pruning
+
+These reduce memory and computation while keeping most of the benefits.
+
+---
+
+# Interview Answer (30 Seconds)
+
+> The number of attention heads is a model hyperparameter chosen by the architect. The embedding dimension is divided equally among the heads, so `d_model` must be divisible by the number of heads. Multiple heads allow the model to learn different relationships in parallel, while each head retains enough dimensionality to learn meaningful patterns. In practice, head dimensions are often kept around 64–128, and the number of heads is selected accordingly.
+
+</details>
+
+---
+
+#### `in attension mechanism we what is divided by QK^T? and why do we do so? `
+
+<details>
+You're referring to this equation from self-attention:
+
+$$
+\text{Attention}(Q,K,V)=
+\text{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}
+\right)
+V
+$$
+
+The question is:
+
+> Why do we divide (QK^T) by (\sqrt{d_k})?
+
+---
+
+# Short Answer
+
+We divide by:
+
+$$
+\sqrt{d_k}
+$$
+
+where:
+
+$$
+d_k = \text{dimension of the Query and Key vectors}
+$$
+
+This is called **scaling**.
+
+It prevents the dot-product values from becoming too large, which would make the softmax output extremely peaked and difficult to train.
+
+---
+
+# First Understand What (QK^T) Represents
+
+Suppose:
+
+```text
+Query = [2, 3, 1, 4]
+
+Key   = [1, 2, 3, 2]
+```
+
+Dot product:
+
+$$
+Q \cdot K=
+(2\times1)+(3\times2)+(1\times3)+(4\times2)
+$$
+
+$$
+= 2+6+3+8
+$$
+
+$$
+= 19
+$$
+
+This score tells us:
+
+> "How much should one word pay attention to another word?"
+
+---
+
+# Problem: Larger Dimensions ⇒ Larger Scores
+
+Suppose:
+
+```text
+d_k = 4
+```
+
+Typical score:
+
+```text
+≈ 10-20
+```
+
+No issue.
+
+---
+
+Now suppose:
+
+```text
+d_k = 512
+```
+
+The dot product is adding 512 multiplications.
+
+The score might become:
+
+```text
+150
+300
+500
+```
+
+or even larger.
+
+---
+
+# What Happens to Softmax?
+
+Suppose attention scores are:
+
+```text
+[2, 3, 4]
+```
+
+Softmax:
+
+```text
+[0.09, 0.24, 0.67]
+```
+
+Nice distribution.
+
+---
+
+Now imagine scores:
+
+```text
+[200, 300, 400]
+```
+
+Softmax becomes approximately:
+
+```text
+[0, 0, 1]
+```
+
+---
+
+## Why is that bad?
+
+The model becomes **overconfident**.
+
+Instead of:
+
+```text
+Word A = 30%
+Word B = 40%
+Word C = 30%
+```
+
+it becomes:
+
+```text
+Word A = 0%
+Word B = 0%
+Word C = 100%
+```
+
+The attention collapses onto one token.
+
+---
+
+# Why Does This Hurt Training?
+
+Remember:
+
+Neural networks learn using gradients.
+
+When softmax becomes extremely sharp:
+
+```text
+[0, 0, 1]
+```
+
+its gradients become very small.
+
+This is called **softmax saturation**.
+
+Small gradients ⇒ slow learning.
+
+---
+
+## Why Specifically $$ \sqrt{d_k} $$ ?
+
+This comes from statistics.
+
+Assume Query and Key values have:
+
+```text
+mean = 0
+variance = 1
+```
+
+When computing a dot product of dimension (d_k):
+
+$$
+QK^T
+$$
+
+the variance grows roughly proportional to:
+
+$$
+d_k
+$$
+
+So as dimensions increase:
+
+```text
+64  → variance 64
+128 → variance 128
+512 → variance 512
+```
+
+The scores naturally become larger.
+
+Dividing by:
+
+$$
+\sqrt{d_k}
+$$
+
+brings the variance back to a stable range.
+
+---
+
+# Example
+
+Suppose:
+
+```text
+d_k = 64
+```
+
+Then:
+$$
+\sqrt{64}=8
+$$
+
+If attention score is:
+
+```text
+80
+```
+
+After scaling:
+
+$$
+80/8=10
+$$
+
+Much more manageable.
+
+---
+
+Suppose:
+
+```text
+d_k = 256
+```
+
+$$
+\sqrt{256}=16
+$$
+
+Score:
+
+```text
+160
+```
+
+becomes:
+
+$$
+160/16=10
+$$
+
+Again stable.
+
+---
+
+# Intuition
+
+Think of it like exam marks.
+
+Without scaling:
+
+```text
+Student A = 400
+Student B = 410
+Student C = 420
+```
+
+The differences dominate everything.
+
+With scaling:
+
+```text
+25
+26
+27
+```
+
+You still preserve ranking, but the numbers are in a healthier range.
+
+---
+
+# What if We Don't Scale?
+
+The authors of the paper:
+
+> Attention Is All You Need
+
+observed that for large dimensions:
+
+* dot products become large
+* softmax saturates
+* gradients become tiny
+* training becomes unstable
+
+Scaling fixed this.
+
+---
+
+# Interview-Friendly Answer
+
+> In scaled dot-product attention, we divide (QK^T) by (\sqrt{d_k}), where (d_k) is the key/query dimension. As the dimensionality increases, dot-product scores grow larger in magnitude, causing the softmax function to become overly peaked and resulting in small gradients. Scaling by (\sqrt{d_k}) keeps the attention scores in a stable range, prevents softmax saturation, and improves training stability and convergence.
+</details>
+
+---
+
+<details>
+
+</details>
+
+---
+
+<details>
+
+</details>
+
+---
+
+#### ❓`Suppose if there are 10 words, so in self attension does any word at position n just looks at words at n-1 and n+1 or all the words before and after it?`
+
+
+<details>
 
 ### Short Answer
 
