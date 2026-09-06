@@ -5630,6 +5630,217 @@ NIST's current AI RMF guidance also frames AI risk management as a continuous li
 </details>
 
 <details>
+<summary>QnA</summary>
+# 25 Most Important RAG Interview Questions & Answers
+*Covering: Advanced RAG, Evaluation, Ingestion & Updation, Quality Maintenance, Quality Degradation*
+
+---
+
+## Section A — Advanced RAG Techniques
+
+### Q1. What's the difference between semantic chunking and fixed-size chunking, and when would you use each?
+Fixed-size chunking splits text every N tokens regardless of meaning — fast, predictable, but can cut a thought mid-sentence or merge unrelated topics into one chunk. Semantic chunking embeds sentences and splits where similarity between adjacent sentences drops sharply (a topic boundary).
+
+**Use fixed-size** for homogeneous, structurally uniform content (logs, short FAQs) where speed and simplicity matter more than precision. **Use semantic chunking** for long-form, topic-dense documents (research papers, policy docs) where retrieval precision depends on clean topic boundaries. Tradeoff: semantic chunking costs an extra embedding pass at ingestion time.
+
+---
+
+### Q2. Explain Hierarchical Indexing (parent-child retrieval). Why not just retrieve the same chunk you searched?
+Small chunks retrieve precisely (less noise diluting the embedding) but lack surrounding context. Large chunks preserve context but retrieve imprecisely. Hierarchical indexing decouples the two: you **index and search small child chunks**, but once a match is found, you **return the larger parent chunk** to the LLM for generation.
+
+Implementation: child chunks store a `parent_id`; on retrieval, look up and return the parent from a document store (e.g., LangChain's `ParentDocumentRetriever`). Best of both worlds — search precision + generation context.
+
+---
+
+### Q3. Why is Hybrid Search (BM25 + vector) necessary even with strong embedding models?
+Semantic embeddings are excellent at conceptual similarity but weak at **exact-match** cases: product SKUs, error codes, acronyms, names — tokens that carry little semantic meaning but matter for exact retrieval. BM25 (keyword/TF-IDF based) catches these reliably.
+
+Production systems fuse both rankings using **Reciprocal Rank Fusion (RRF)**, combining a keyword ranked list and a vector ranked list into one score. As corpora scale, near-duplicate semantic content increases, which degrades pure-vector recall — making hybrid search *more* important at scale, not less.
+
+---
+
+### Q4. What's the difference between Query Rewriting and HyDE?
+**Query Rewriting** uses an LLM to reformulate a casual/ambiguous user query into a more precise search query before embedding — e.g., "what's the deal with leave policy" → "amended PTO and leave entitlement policy 2024."
+
+**HyDE (Hypothetical Document Embeddings)** goes further: instead of rewriting the question, the LLM generates a *hypothetical answer* to the question, and that hypothetical answer is embedded and used for retrieval — not the query itself. This works because answer-shaped text lands closer in vector space to real answer documents than a short question does.
+
+Use rewriting when queries are just poorly phrased. Use HyDE when the query and answer live in structurally different registers (short question vs. dense technical answer).
+
+---
+
+### Q5. What's the difference between a bi-encoder and a cross-encoder, and why is reranking a separate stage from initial retrieval?
+A **bi-encoder** embeds the query and each document independently, then compares vectors (fast, used for the initial ANN search over millions of chunks). A **cross-encoder** processes the query and document *together* in one forward pass, capturing much richer interaction — but it's too slow to run over an entire corpus.
+
+The standard pattern: bi-encoder retrieves a fast, approximate top-K (e.g., 20-50), then a cross-encoder **reranks** just those candidates for true relevance, and only the top 3-5 go to the LLM. This two-stage design balances speed (bi-encoder over millions) with precision (cross-encoder over dozens).
+
+---
+
+### Q6. What's the difference between Self-RAG/Corrective RAG and Agentic RAG?
+**Self-RAG / Corrective RAG** adds a *reflection* step to an otherwise linear pipeline: after retrieval, an LLM grades whether the retrieved context is actually relevant/sufficient. If not, it rewrites the query and retries (Self-RAG), or — in Corrective RAG — falls back to a web search if internal retrieval scores low. It's still fundamentally a pipeline with a conditional loop.
+
+**Agentic RAG** is architecturally different: instead of a fixed pipeline, an LLM agent dynamically decides *which tools to call, in what order, how many times* — it might query internal docs, then a web search tool, then a SQL database, then synthesize with citations. It's a general-purpose reasoning loop with tools, not a retrieval pipeline with one conditional branch.
+
+---
+
+## Section B — Evaluation & Benchmarking
+
+### Q7. What's the difference between evaluating and benchmarking a RAG system?
+**Evaluation** is continuous or ad-hoc assessment of *your specific system* on *your own data/production traffic*, used to guide iteration (e.g., "did this week's chunking change improve our answers?"). **Benchmarking** is standardized comparison against *public datasets and baselines*, used for objective, reproducible comparison — e.g., using MTEB to choose an embedding model before you have production data at all.
+
+You typically benchmark early (component selection) and evaluate continuously (system health).
+
+---
+
+### Q8. What do the core RAGAS metrics measure?
+- **Faithfulness** — is the generated answer actually supported by the retrieved context (hallucination check)
+- **Answer Relevance** — does the answer address the user's actual question
+- **Context Precision** — are the retrieved chunks relevant to the query
+- **Context Recall** — did retrieval surface everything needed to fully answer the question
+
+Note the split: faithfulness and answer relevance evaluate **generation**; context precision and recall evaluate **retrieval**. Separating these is exactly how you isolate root cause when quality drops (see Q23).
+
+---
+
+### Q9. What is LLM-as-judge, and what are its pitfalls?
+LLM-as-judge uses a strong LLM (GPT-4/Claude) to score generated answers against a rubric, instead of requiring human raters for every sample — it scales evaluation to thousands of production queries cheaply.
+
+**Pitfalls:** verbosity bias (judges tend to rate longer answers more favorably regardless of quality), position bias (in pairwise comparisons, order can skew results), and judge/generator correlation (if judge and generator are similar models, they may share blind spots). Mitigation: calibrate the judge against a human-labeled sample before trusting it in CI, and periodically re-audit.
+
+---
+
+### Q10. How would you build a golden evaluation dataset for a production RAG system?
+Curate real production queries (not synthetic ones) spanning common intents, edge cases, and known failure modes. Have subject-matter experts verify or write the correct answer and identify the ideal supporting chunks. Keep it versioned and continuously expand it with **hard examples surfaced from negative user feedback** (see Q19) — this makes it a living regression suite, run before every pipeline deployment, not a one-time artifact.
+
+---
+
+### Q11. Name the standard retrieval metrics and explain how they differ from generation metrics.
+Retrieval metrics require relevance judgments and score *what was retrieved*:
+- **Precision@k / Recall@k** — proportion of relevant docs in top-k / proportion of all relevant docs found
+- **MRR (Mean Reciprocal Rank)** — how high the first relevant result ranks
+- **NDCG** — accounts for graded relevance and rank position, not just binary relevance
+
+Generation metrics (faithfulness, answer relevance) score *what the LLM produced* given that context. A system can have perfect retrieval metrics and still generate a bad answer (prompt/LLM issue) — which is exactly why both must be tracked independently.
+
+---
+
+## Section C — Ingestion & Updation
+
+### Q12. How do you handle file updates without creating duplicate or stale chunks?
+Three patterns, in order of typical adoption:
+1. **Delete + re-insert** — simplest; required when content edits shift chunk boundaries
+2. **Deterministic upsert** — chunk ID = `hash(doc_id + chunk_index)`; re-running ingestion for the same doc naturally overwrites rather than duplicates
+3. **Soft delete / tombstoning** — flag old vectors inactive via metadata instead of hard-deleting; purge later in a batch job. Avoids expensive deletes and read/write races under high write throughput.
+
+Most production systems default to deterministic upserts for routine updates and tombstoning for high-churn collections.
+
+---
+
+### Q13. Why are deterministic chunk IDs important in ingestion pipelines?
+Ingestion jobs get retried, replayed, or run concurrently (e.g., after a queue redelivery). If chunk IDs are randomly generated on each run, re-processing the same document creates duplicate vectors. Deriving the ID deterministically from `doc_id + chunk_index` (or a content hash) makes ingestion **idempotent** — re-running it is always safe and self-correcting, which is essential for any event-driven or CDC-based pipeline.
+
+---
+
+### Q14. How do you re-index a system after an embedding model upgrade with zero downtime?
+Use **blue-green reindexing**: build the entire new collection with the new embedding model in parallel, alongside the live one. Validate retrieval quality against your golden dataset on the new collection before it serves any traffic. Once validated, cut over via an **alias swap** (query traffic points to an alias, not the collection name directly) so the switch is instant and reversible. Never reindex in place — that risks serving mixed old/new embeddings mid-migration, which silently corrupts similarity search.
+
+---
+
+### Q15. How would you design multimodal ingestion for a knowledge base with PDFs containing both text and images?
+Parse text and images separately: text goes through standard chunking + embedding; each image gets a generated caption plus OCR (for embedded text), and is treated as its own chunk. Both share a `parent_doc_id` and `page_number` in metadata. At query time, retrieval searches text and image-caption embeddings, and results are re-assembled using the shared metadata so the LLM sees text and relevant image context from the same page together. Raw images are stored in object storage (S3), never in the vector DB — the vector DB only holds the embedding and a URI pointer.
+
+---
+
+### Q16. What is Change Data Capture (CDC) and how does it apply to keeping a RAG index synchronized?
+CDC means the source system (SharePoint, a database, S3) emits an event the moment content changes, rather than requiring a periodic full scan. That event lands on a queue (Kafka/SQS), triggering an ingestion worker to re-chunk and re-embed only the affected document. This keeps the index near-real-time and avoids the cost of full re-scans. The alternative — batch polling — is simpler to build but introduces staleness proportional to the poll interval.
+
+---
+
+## Section D — Maintaining Quality at Scale
+
+### Q17. How do you maintain retrieval accuracy when a vector DB scales to hundreds of millions of chunks?
+Key techniques, used together:
+- **Two-stage retrieval** — cheap approximate search (ANN over a quantized index) for a candidate set, then precise rescoring/reranking on that smaller set
+- **Quantization** (scalar/product) to keep the index memory-feasible without full accuracy loss
+- **Sharding** by tenant or domain to reduce per-query search space
+- **Hybrid search** — becomes more, not less, important at scale as near-duplicate content increases and dilutes pure-vector recall
+- Periodic recall benchmarking against a fixed labeled set to catch silent degradation as the index grows
+
+---
+
+### Q18. Why must metadata filtering happen inside the ANN search rather than as a post-filter?
+If you retrieve top-k by vector similarity first and *then* apply a metadata filter (e.g., `department = finance`), you risk filtering away most or all of your top-k results, leaving too few — or zero — relevant results, especially when the filter is restrictive. The fix is **filtered ANN search**: the vector DB applies the metadata constraint *during* graph traversal (e.g., HNSW), searching only within the valid subset from the start. Vector DBs like Qdrant and Weaviate support this natively — it's a real differentiator to know when choosing infrastructure at scale.
+
+---
+
+### Q19. How would you design a continuous feedback loop that improves a RAG system over time?
+Capture explicit feedback (thumbs up/down) and implicit signals (query reformulation rate — one of the strongest negative signals — dwell time, citation clicks), always attached to the **full trace** (query, retrieved chunks, answer, model version). Use an LLM to auto-categorize negative feedback into failure modes (retrieval miss vs. hallucination vs. incomplete answer). Feed categorized failures into: the golden eval set (regression testing), a human review queue for low-confidence cases, and reranker fine-tuning using click data as relevance labels. Guard against overfitting to a vocal minority by periodically human-auditing the feedback pipeline itself.
+
+---
+
+### Q20. What is permission-aware retrieval, and why does it matter for quality/security together?
+Standard retrieval ranks purely by relevance. Permission-aware retrieval adds a second, independent filter: the querying user's document-level access rights (ACLs). Without this, a relevant-but-unauthorized document can be retrieved and surfaced in an answer — a real production security failure, not just a quality issue. The two filters (relevance and authorization) must be applied as separate stages, and access control should be enforced at the retrieval layer, not just at the UI layer, since the LLM will happily use whatever context it's given.
+
+---
+
+### Q21. How does chunk size and overlap affect retrieval quality, and how do you tune them?
+Too-small chunks lose context and can be embedded ambiguously (a lone sentence often doesn't carry enough meaning to match a query well). Too-large chunks dilute the embedding with irrelevant surrounding text, hurting precision, and waste tokens in generation. `chunk_overlap` (commonly 10-20% of chunk size) prevents losing meaning at chunk boundaries, since a sentence split across two chunks would otherwise be poorly represented in both. Tuning is empirical: run your golden eval set across a few chunk-size configurations and pick the one that maximizes context precision/recall — there's no universal "right" size, it depends on document structure and query patterns.
+
+---
+
+## Section E — Detecting & Handling Quality Degradation
+
+### Q22. What are the different types of drift in a RAG system, and how do you detect each?
+- **Data drift** — source content changes or new terminology emerges; detect via periodic content audits and query-cluster analysis for topics not covered in the KB
+- **Embedding drift** — inconsistent embedding model versions across the index (e.g., partial reindex); detect via version metadata audits
+- **Query drift** — user query patterns/topics shift over time; detect via clustering incoming queries and comparing distributions to historical baselines (KL divergence, Population Stability Index)
+- **Concept drift** — the ground truth itself changes (a policy is updated); detect via SME review cadence and golden-set staleness checks
+
+---
+
+### Q23. Your production RAG system's user satisfaction has dropped over the last month with no code changes deployed. How do you diagnose this?
+First, isolate **retrieval drift from generation drift** — this is the single most important diagnostic move. Run the golden eval set and check context precision/recall (retrieval) separately from faithfulness/answer relevance (generation).
+
+- If context recall dropped → likely a stale index (new content not ingested), a CDC pipeline failure, or a change in query patterns the current chunking doesn't serve well
+- If context recall is stable but faithfulness dropped → likely an LLM-side issue: a silent model version change upstream, a prompt regression, or context window truncation
+- Cross-reference with the feedback pipeline (Q19) to see if failures cluster around specific document sources or query types — that narrows it to a content gap vs. a systemic pipeline issue
+
+Only after isolating the layer do you decide the fix (reindex, re-chunk, prompt fix, or model rollback) — jumping straight to "let's re-embed everything" without this diagnosis wastes a reindex cycle on the wrong problem.
+
+---
+
+### Q24. What monitoring metrics and signals should be in place to catch quality degradation before users complain?
+- Retrieval confidence score distribution over time (declining average similarity is an early signal)
+- Feedback trend lines (rising thumbs-down rate, rising reformulation rate)
+- Rising fallback/"I don't know" response rate
+- Latency percentile trends as the index grows
+- A **shadow evaluation pipeline** running the golden dataset nightly/weekly with alerting on threshold breach — this is what catches drift before it shows up in user complaints, rather than reacting after the fact
+
+---
+
+### Q25. Once you've identified the root cause of degradation, what remediation strategies are available?
+Depends on the isolated layer (from Q23):
+- **Stale/incomplete index** → trigger targeted reindexing for affected sources, fix the CDC/ingestion pipeline gap
+- **Chunking mismatch with new query patterns** → revisit chunking strategy (size, overlap, semantic vs. fixed), re-run against golden set before deploying
+- **Embedding model degradation or drift** → blue-green reindex with an updated/re-evaluated embedding model (Q14)
+- **Generation-side issue** → prompt fix, model version pinning/rollback, or context compression if truncation is the cause
+- **Recurring content gaps** → feed into a content sourcing process — the fix isn't technical, it's that the answer genuinely doesn't exist in the knowledge base yet
+
+In all cases, the fix should be validated against the golden eval set *before* full rollout, and the incident should be added as a permanent regression case so the same drift doesn't silently recur.
+
+---
+
+## Quick Reference — Category Map
+
+| Category | Questions |
+|---|---|
+| Advanced RAG Techniques | Q1–Q6 |
+| Evaluation & Benchmarking | Q7–Q11 |
+| Ingestion & Updation | Q12–Q16 |
+| Maintaining Quality at Scale | Q17–Q21 |
+| Detecting & Handling Degradation | Q22–Q25 |
+</details>
+
+<details>
 <summary></summary>
 
 </details>
