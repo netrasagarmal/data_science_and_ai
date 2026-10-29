@@ -1,6 +1,8 @@
 # Gradient Boosting & XGBoost
 
 ## Gradient Boosting
+<details>
+<summary></summary>
 
 The most important idea to lock in is this:
 
@@ -1458,8 +1460,15 @@ $$
 
 **If you understand those five equations and the salary table above, you understand the core mechanics of Gradient Boosting rather than just memorizing the definition.**
 
+</details>
+
 ---
+
+
 ## XGBoost
+
+<details>
+<summary></summary>
 
 Yes. The easiest way to understand **XGBoost** is:
 
@@ -2501,3 +2510,5 @@ while controlling model complexity?"
 And one final distinction:
 
 > **Parallelization speeds up construction of an individual tree; it does not remove the sequential dependency between boosting rounds.**
+
+</details>
